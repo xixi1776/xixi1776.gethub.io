@@ -1,1281 +1,904 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>圣经创世故事三语绘本</title>
+    <title>圣经地理互动地图</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" >
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600&amp;family=Quicksand:wght@400;500;600&amp;display=swap" rel="stylesheet">
+    
     <style>
+        :root {
+            --primary-color: #161665;
+            --accent-color: #A3A387;
+            --neutral-color: #C544F8;
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --border-color: #e2e8f0;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
         }
-        
+
         body {
-            background: linear-gradient(135deg, #1a237e 0%, #283593 50%, #3949ab 100%);
-            color: #333;
-            line-height: 1.6;
-            padding: 20px;
+            font-family: 'Work Sans', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: var(--text-color);
             min-height: 100vh;
+            overflow-x: hidden;
         }
-        
+
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-        }
-        
-        header {
-            background: linear-gradient(to right, #3f51b5, #5c6bc0);
-            color: white;
-            text-align: center;
-            padding: 30px 20px;
-            border-bottom: 5px solid #1a237e;
-        }
-        
-        h1 {
-            font-size: 2.8rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-        
-        .subtitle {
-            font-size: 1.3rem;
-            opacity: 0.9;
-            font-weight: 300;
-        }
-        
-        .language-selector {
             display: flex;
-            justify-content: center;
-            margin-top: 20px;
-            gap: 10px;
+            height: 100vh;
+            position: relative;
         }
-        
-        .lang-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid white;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 30px;
-            cursor: pointer;
+
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 10px var(--shadow-color);
+        }
+
+        .title {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1.5rem;
             font-weight: 600;
-            transition: all 0.3s ease;
+            color: var(--primary-color);
+            margin: 0;
         }
-        
-        .lang-btn:hover, .lang-btn.active {
-            background: white;
-            color: #3f51b5;
-            transform: translateY(-3px);
-        }
-        
-        .main-content {
+
+        .language-switch {
             display: flex;
-            flex-direction: column;
-            padding: 30px;
+            gap: 0.5rem;
         }
-        
-        .day-section {
-            display: none;
-            animation: fadeIn 0.8s ease;
+
+        .lang-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--accent-color);
+            background: transparent;
+            color: var(--accent-color);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            font-weight: 500;
         }
-        
-        .day-section.active {
-            display: block;
+
+        .lang-btn.active,
+        .lang-btn:hover {
+            background: var(--accent-color);
+            color: white;
         }
-        
+
+        .map-container {
+            flex: 0 0 60%;
+            height: 100vh;
+            position: relative;
+            padding-top: 80px;
+        }
+
+        #map {
+            width: 100%;
+            height: calc(100% - 80px);
+            border-radius: 0;
+        }
+
+        .sidebar {
+            flex: 0 0 40%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            overflow-y: auto;
+            border-left: 1px solid var(--border-color);
+            box-shadow: -5px 0 15px var(--shadow-color);
+            padding-top: 100px;
+        }
+
+        .sidebar-content {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
-        .day-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #e8eaf6;
-        }
-        
-        .day-title {
-            font-size: 2.2rem;
-            color: #1a237e;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .day-number {
-            background: #3f51b5;
-            color: white;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+
+        .location-title {
+            font-family: 'Quicksand', sans-serif;
             font-size: 1.8rem;
-            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            border-bottom: 3px solid var(--accent-color);
+            padding-bottom: 0.5rem;
         }
-        
-        .day-nav {
-            display: flex;
-            gap: 10px;
+
+        .location-subtitle {
+            font-size: 1.2rem;
+            color: var(--accent-color);
+            margin-bottom: 1.5rem;
+            font-weight: 500;
         }
-        
-        .nav-btn {
-            background: #3f51b5;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+
+        .info-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(248, 250, 252, 0.6);
+            border-radius: 12px;
+            border-left: 4px solid var(--accent-color);
         }
-        
-        .nav-btn:hover {
-            background: #303f9f;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .nav-btn:disabled {
-            background: #b0bec5;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .content-wrapper {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .image-section {
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            height: 400px;
-        }
-        
-        .image-section img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s ease;
-        }
-        
-        .image-section img:hover {
-            transform: scale(1.03);
-        }
-        
-        .text-section {
-            background: #f5f7ff;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        }
-        
-        .language-tabs {
-            display: flex;
-            border-bottom: 2px solid #e8eaf6;
-            margin-bottom: 20px;
-        }
-        
-        .tab-btn {
-            padding: 12px 25px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-            color: #666;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .tab-btn:hover {
-            color: #3f51b5;
-        }
-        
-        .tab-btn.active {
-            color: #3f51b5;
-        }
-        
-        .tab-btn.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background: #3f51b5;
-        }
-        
-        .text-content {
-            min-height: 300px;
-            padding: 10px;
+
+        .info-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
             font-size: 1.1rem;
-            line-height: 1.8;
+            font-weight: 600;
         }
-        
-        .chinese-text, .classical-text, .english-text {
-            display: none;
-            animation: fadeIn 0.5s ease;
+
+        .info-section p {
+            line-height: 1.6;
+            margin-bottom: 0.8rem;
         }
-        
-        .chinese-text.active, .classical-text.active, .english-text.active {
-            display: block;
-        }
-        
-        .classical-text {
-            font-family: 'SimSun', 'STKaiti', serif;
-            font-size: 1.15rem;
-        }
-        
-        .english-text {
-            font-family: 'Georgia', 'Times New Roman', serif;
-        }
-        
-        .days-navigation {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 30px;
-            padding-top: 25px;
-            border-top: 2px solid #e8eaf6;
-        }
-        
-        .day-dot {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #e8eaf6;
-            color: #3f51b5;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .day-dot:hover {
-            background: #c5cae9;
-            transform: translateY(-5px);
-        }
-        
-        .day-dot.active {
-            background: #3f51b5;
-            color: white;
-            transform: scale(1.1);
-            box-shadow: 0 5px 15px rgba(63, 81, 181, 0.4);
-        }
-        
-        footer {
-            text-align: center;
-            padding: 20px;
-            color: #666;
+
+        .coordinates {
+            font-family: 'Courier New', monospace;
+            background: var(--bg-color);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            display: inline-block;
             font-size: 0.9rem;
-            border-top: 1px solid #e8eaf6;
-            background: #f5f7ff;
         }
-        
-        .verse-reference {
+
+        .bible-verse {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
             font-style: italic;
-            color: #5c6bc0;
-            margin-top: 15px;
-            padding-left: 10px;
-            border-left: 3px solid #5c6bc0;
-        }
-        
-        .creation-highlight {
-            color: #3f51b5;
-            font-weight: 600;
-        }
-        
-        .blessing {
-            color: #4caf50;
-            font-weight: 600;
-        }
-        
-        .creation-day {
-            font-weight: bold;
-            color: #1a237e;
+            position: relative;
+            overflow: hidden;
         }
 
-        /* 平板设备适配 (768px-992px) */
-        @media (max-width: 992px) {
-            .content-wrapper {
-                grid-template-columns: 1fr;
-            }
+        .bible-verse::before {
+            content: '"';
+            font-size: 4rem;
+            position: absolute;
+            top: -0.5rem;
+            left: 1rem;
+            opacity: 0.3;
+            font-family: Georgia, serif;
         }
 
-        @media (max-width: 992px) and (min-width: 768px) {
-            .container {
-                margin: 10px;
-                border-radius: 15px;
-            }
-            
-            .main-content {
-                padding: 20px;
-            }
-            
-            .text-section {
-                padding: 20px;
-            }
-            
-            .image-section {
-                height: 350px;
-            }
+        .route-controls {
+            position: absolute;
+            top: 100px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px var(--shadow-color);
+            backdrop-filter: blur(10px);
         }
 
-        /* 手机设备适配 (小于768px) */
+        .route-btn {
+            display: block;
+            width: 100%;
+            padding: 0.8rem 1.2rem;
+            margin: 0.5rem 0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .route-btn.moses {
+            background: linear-gradient(135deg, #8B4513, #CD853F);
+            color: white;
+        }
+
+        .route-btn.jesus {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #8B4513;
+        }
+
+        .route-btn.paul {
+            background: linear-gradient(135deg, #4169E1, #6495ED);
+            color: white;
+        }
+
+        .route-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--shadow-color);
+        }
+
+        .route-btn.active {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--shadow-color);
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--accent-color);
+        }
+
+        .welcome-message h2 {
+            font-family: 'Quicksand', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .welcome-message p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-                background: #1a237e;
+            .container {
+                flex-direction: column;
             }
             
-            .container {
-                border-radius: 15px;
+            .map-container {
+                flex: none;
+                height: 50vh;
+                padding-top: 70px;
+            }
+            
+            #map {
+                height: calc(100% - 70px);
+            }
+            
+            .sidebar {
+                flex: none;
+                height: 50vh;
+                border-left: none;
+                border-top: 1px solid var(--border-color);
+                padding-top: 1.5rem;
+            }
+            
+            .header {
+                padding: 0.8rem 1rem;
+            }
+            
+            .title {
+                font-size: 1.2rem;
+            }
+            
+            .route-controls {
+                position: relative;
+                top: auto;
+                left: auto;
+                margin: 1rem;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            
+            .route-btn {
+                flex: 1;
+                min-width: 120px;
                 margin: 0;
             }
-            
-            header {
-                padding: 20px 15px;
-            }
-            
-            h1 {
-                font-size: 1.8rem;
-                line-height: 1.3;
-            }
-            
-            .subtitle {
-                font-size: 1rem;
-            }
-            
-            .language-selector {
-                flex-wrap: wrap;
-                gap: 8px;
-            }
-            
-            .lang-btn {
-                padding: 8px 15px;
-                font-size: 0.9rem;
-            }
-            
-            .main-content {
-                padding: 20px;
-            }
-            
-            .day-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 15px;
-            }
-            
-            .day-title {
-                width: 100%;
-                justify-content: flex-start;
-                font-size: 1.6rem;
-            }
-            
-            .day-nav {
-                width: 100%;
-                flex-direction: row;
-                justify-content: space-between;
-            }
-            
-            .nav-btn {
-                flex: 1;
-                padding: 10px 15px;
-                font-size: 0.9rem;
-                justify-content: center;
-            }
-            
-            .image-section {
-                height: 250px;
-                margin-bottom: 20px;
-            }
-            
-            .text-section {
-                padding: 15px;
-            }
-            
-            .language-tabs {
-                flex-wrap: wrap;
-            }
-            
-            .tab-btn {
-                flex: 1;
-                min-width: 80px;
-                padding: 10px 15px;
-                font-size: 0.9rem;
-                text-align: center;
-            }
-            
-            .text-content {
-                font-size: 1rem;
-                min-height: 250px;
-                padding: 5px;
-            }
-            
-            .classical-text {
-                font-size: 1rem;
-            }
-            
-            .days-navigation {
-                gap: 8px;
-                margin-top: 20px;
-                padding-top: 20px;
-            }
-            
-            .day-dot {
-                width: 40px;
-                height: 40px;
-                font-size: 0.9rem;
-            }
-            
-            .day-number {
-                width: 40px;
-                height: 40px;
-                font-size: 1.5rem;
-            }
         }
 
-        /* 小手机适配 (小于576px) */
-        @media (max-width: 576px) {
-            h1 {
-                font-size: 1.6rem;
-            }
-            
-            .day-title h2 {
-                font-size: 1.4rem;
-            }
-            
-            .language-selector {
-                justify-content: space-between;
-            }
-            
-            .lang-btn {
-                flex: 1;
-                margin: 2px;
-                padding: 8px 10px;
-                font-size: 0.85rem;
-            }
-            
-            .image-section {
-                height: 200px;
-            }
-            
-            .tab-btn {
-                padding: 8px 10px;
-                font-size: 0.85rem;
-            }
-            
-            .text-content {
-                font-size: 0.95rem;
-                line-height: 1.6;
-            }
-            
-            .days-navigation {
-                gap: 6px;
-            }
-            
-            .day-dot {
-                width: 35px;
-                height: 35px;
-                font-size: 0.85rem;
-            }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            font-size: 1.2rem;
+            color: var(--accent-color);
         }
 
-        /* 横屏模式适配 */
-        @media (max-height: 500px) and (orientation: landscape) {
-            .image-section {
-                height: 300px;
-            }
-            
-            .text-content {
-                min-height: 200px;
-                max-height: 250px;
-                overflow-y: auto;
-            }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 1rem;
         }
 
-        /* 触摸设备优化 */
-        @media (hover: none) and (pointer: coarse) {
-            .lang-btn:hover, 
-            .nav-btn:hover, 
-            .tab-btn:hover, 
-            .day-dot:hover {
-                transform: none;
-            }
-            
-            .nav-btn, 
-            .tab-btn, 
-            .day-dot {
-                min-height: 44px;
-                min-width: 44px;
-            }
-            
-            .lang-btn {
-                min-height: 36px;
-            }
-            
-            .image-section img:hover {
-                transform: none;
-            }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        /* 超大屏幕优化 */
-        @media (min-width: 1400px) {
-            .container {
-                max-width: 1300px;
-            }
-            
-            .content-wrapper {
-                gap: 40px;
-            }
-            
-            .image-section {
-                height: 450px;
-            }
+        .leaflet-popup-content {
+            font-family: 'Work Sans', sans-serif;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .custom-popup {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 20px var(--shadow-color);
+        }
+
+        .custom-popup h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        .custom-popup p {
+            color: var(--text-color);
+            margin-bottom: 0.3rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>创世记 · 七日创造</h1>
-            <div class="subtitle">中文 · 文言文 · 英文三语对照绘本</div>
-            
-            <div class="language-selector">
-                <button class="lang-btn active" data-lang="chinese">中文</button>
-                <button class="lang-btn" data-lang="classical">文言文</button>
-                <button class="lang-btn" data-lang="english">英文</button>
+        <header class="header">
+            <h1 class="title">圣经地理互动地图</h1>
+            <div class="language-switch">
+                <button class="lang-btn active" data-lang="zh">中文</button>
+                <button class="lang-btn" data-lang="en">English</button>
             </div>
         </header>
-        
-        <div class="main-content">
-            <!-- 起初 -->
-            <div class="day-section active" id="day0">
-                <div class="day-header">
-                    <div class="day-title">
-                        <div class="day-number">起</div>
-                        <h2>起初 · In the Beginning</h2>
-                    </div>
-                    <div class="day-nav">
-                        <button class="nav-btn" id="prevDay0" disabled>
-                            <span>上一日</span>
-                        </button>
-                        <button class="nav-btn" id="nextDay0">
-                            <span>下一日</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="content-wrapper">
-                    <div class="image-section">
-                        <img src="https://xishesherukudiyige-1329755034.cos.ap-chongqing.myqcloud.com/%E5%9C%A3%E7%BB%8F%E6%95%85%E4%BA%8B%E5%88%9B%E4%BD%9C/%E8%B5%B7%E5%88%9D.jpg" alt="起初">
-                    </div>
-                    
-                    <div class="text-section">
-                        <div class="language-tabs">
-                            <button class="tab-btn active" data-tab="chinese">中文</button>
-                            <button class="tab-btn" data-tab="classical">文言文</button>
-                            <button class="tab-btn" data-tab="english">英文</button>
-                        </div>
-                        
-                        <div class="text-content">
-                            <div class="chinese-text active">
-                                <p><span class="creation-highlight">起初，神创造天地。</span>地是空虚混沌，渊面黑暗；神的灵运行在水面上。</p>
-                                <p>世界原本空无一物，只有神的灵在水面上运行，准备开始伟大的创造工作。</p>
-                                <div class="verse-reference">创世记 1:1-2</div>
-                            </div>
-                            
-                            <div class="classical-text">
-                                <p><span class="creation-highlight">起初：世上本无物，神之道行且施，灵运而行。</span></p>
-                                <p>天地未形，混沌未开，神灵游于水上，待创万物。</p>
-                                <div class="verse-reference">创世纪 一：一至二</div>
-                            </div>
-                            
-                            <div class="english-text">
-                                <p><span class="creation-highlight">In the beginning God created the heavens and the earth.</span> Now the earth was formless and empty, darkness was over the surface of the deep, and the Spirit of God was hovering over the waters.</p>
-                                <p>The world was without form and void, with darkness covering the deep waters, and the Spirit of God moving over the surface of the waters, ready to begin the work of creation.</p>
-                                <div class="verse-reference">Genesis 1:1-2</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
+        <div class="map-container">
+            <div class="route-controls">
+                <button class="route-btn moses" data-route="moses">
+                    <strong>摩西出埃及</strong><br>
+                    <small>埃及 → 红海 → 西奈山 → 迦南</small>
+                </button>
+                <button class="route-btn jesus" data-route="jesus">
+                    <strong>耶稣传道</strong><br>
+                    <small>拿撒勒 → 加利利 → 耶路撒冷</small>
+                </button>
+                <button class="route-btn paul" data-route="paul">
+                    <strong>保罗传道</strong><br>
+                    <small>耶路撒冷 → 小亚细亚 → 希腊 → 罗马</small>
+                </button>
             </div>
-            
-            <!-- 第一日 -->
-            <div class="day-section" id="day1">
-                <div class="day-header">
-                    <div class="day-title">
-                        <div class="day-number">一</div>
-                        <h2>第一日 · 光明与黑暗</h2>
-                    </div>
-                    <div class="day-nav">
-                        <button class="nav-btn" id="prevDay1">
-                            <span>上一日</span>
-                        </button>
-                        <button class="nav-btn" id="nextDay1">
-                            <span>下一日</span>
-                        </button>
-                    </div>
+            <div id="map"></div>
+        </div>
+
+        <div class="sidebar">
+            <div class="sidebar-content" id="sidebar-content">
+                <div class="welcome-message">
+                    <h2>欢迎来到圣经地理互动地图</h2>
+                    <p>点击地图上的地点标记，了解圣经中的重要地理位置和相关故事。使用左侧的路线按钮，可以查看摩西、耶稣和保罗的行走轨迹。</p>
                 </div>
-                
-                <div class="content-wrapper">
-                    <div class="image-section">
-                        <img src="https://xishesherukudiyige-1329755034.cos.ap-chongqing.myqcloud.com/%E5%9C%A3%E7%BB%8F%E6%95%85%E4%BA%8B%E5%88%9B%E4%BD%9C/%E4%B8%80%E6%97%A5.jpg" alt="第一日">
-                    </div>
-                    
-                    <div class="text-section">
-                        <div class="language-tabs">
-                            <button class="tab-btn active" data-tab="chinese">中文</button>
-                            <button class="tab-btn" data-tab="classical">文言文</button>
-                            <button class="tab-btn" data-tab="english">英文</button>
-                        </div>
-                        
-                        <div class="text-content">
-                            <div class="chinese-text active">
-                                <p><span class="creation-highlight">神说："要有光"，就有了光。</span>神看光是好的，就把光暗分开了。</p>
-                                <p>神称光为昼，称暗为夜。有晚上，有早晨，这是<span class="creation-day">第一日</span>。</p>
-                                <div class="verse-reference">创世记 1:3-5</div>
-                            </div>
-                            
-                            <div class="classical-text">
-                                <p><span class="creation-highlight">第一天：似光，光明初现，轻扶开黑暗，跃然而独立。</span>主说："见天明，见夜分。"如是昼夜分明。</p>
-                                <p>光暗分离，白昼黑夜各得其时，此乃创造之始。</p>
-                                <div class="verse-reference">创世纪 一：三至五</div>
-                            </div>
-                            
-                            <div class="english-text">
-                                <p><span class="creation-highlight">And God said, "Let there be light," and there was light.</span> God saw that the light was good, and he separated the light from the darkness.</p>
-                                <p>God called the light "day," and the darkness he called "night." And there was evening, and there was morning—the <span class="creation-day">first day</span>.</p>
-                                <div class="verse-reference">Genesis 1:3-5</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 第二日 -->
-            <div class="day-section" id="day2">
-                <div class="day-header">
-                    <div class="day-title">
-                        <div class="day-number">二</div>
-                        <h2>第二日 · 天空与水分开</h2>
-                    </div>
-                    <div class="day-nav">
-                        <button class="nav-btn" id="prevDay2">
-                            <span>上一日</span>
-                        </button>
-                        <button class="nav-btn" id="nextDay2">
-                            <span>下一日</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="content-wrapper">
-                    <div class="image-section">
-                        <img src="https://xishesherukudiyige-1329755034.cos.ap-chongqing.myqcloud.com/%E5%9C%A3%E7%BB%8F%E6%95%85%E4%BA%8B%E5%88%9B%E4%BD%9C/%E4%BA%8C%E6%97%A5.jpg" alt="第二日">
-                    </div>
-                    
-                    <div class="text-section">
-                        <div class="language-tabs">
-                            <button class="tab-btn active" data-tab="chinese">中文</button>
-                            <button class="tab-btn" data-tab="classical">文言文</button>
-                            <button class="tab-btn" data-tab="english">英文</button>
-                        </div>
-                        
-                        <div class="text-content">
-                            <div class="chinese-text active">
-                                <p><span class="creation-highlight">神说："诸水之间要有空气，将水分为上下。"</span>神就造出空气，将空气以下的水、空气以上的水分开了。事就这样成了。</p>
-                                <p>神称空气为天。有晚上，有早晨，是<span class="creation-day">第二日</span>。</p>
-                                <div class="verse-reference">创世记 1:6-8</div>
-                            </div>
-                            
-                            <div class="classical-text">
-                                <p><span class="creation-highlight">第二天：神说：轻腾云而上，水滢滢而下，天阔气轻，空明清新。</span>苍穹待万霞始，晨露次日而出。</p>
-                                <p>天水分离，苍穹初现，天地之间始有空间。</p>
-                                <div class="verse-reference">创世纪 一：六至八</div>
-                            </div>
-                            
-                            <div class="english-text">
-                                <p><span class="creation-highlight">And God said, "Let there be an expanse between the waters to separate water from water."</span> So God made the expanse and separated the water under the expanse from the water above it. And it was so.</p>
-                                <p>God called the expanse "sky." And there was evening, and there was morning—the <span class="creation-day">second day</span>.</p>
-                                <div class="verse-reference">Genesis 1:6-8</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 第三日 -->
-            <div class="day-section" id="day3">
-                <div class="day-header">
-                    <div class="day-title">
-                        <div class="day-number">三</div>
-                        <h2>第三日 · 陆地与植物</h2>
-                    </div>
-                    <div class="day-nav">
-                        <button class="nav-btn" id="prevDay3">
-                            <span>上一日</span>
-                        </button>
-                        <button class="nav-btn" id="nextDay3">
-                            <span>下一日</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="content-wrapper">
-                    <div class="image-section">
-                        <img src="https://xishesherukudiyige-1329755034.cos.ap-chongqing.myqcloud.com/%E5%9C%A3%E7%BB%8F%E6%95%85%E4%BA%8B%E5%88%9B%E4%BD%9C/%E4%B8%89%E6%97%A5.jpg" alt="第三日">
-                    </div>
-                    
-                    <div class="text-section">
-                        <div class="language-tabs">
-                            <button class="tab-btn active" data-tab="chinese">中文</button>
-                            <button class="tab-btn" data-tab="classical">文言文</button>
-                            <button class="tab-btn" data-tab="english">英文</button>
-                        </div>
-                        
-                        <div class="text-content">
-                            <div class="chinese-text active">
-                                <p><span class="creation-highlight">神说："天下的水要聚在一处，使旱地露出来。"</span>事就这样成了。神称旱地为地，称水的聚处为海。</p>
-                                <p>神说："地要发生青草和结种子的菜蔬，并结果子的树木，各从其类。"事就这样成了。有晚上，有早晨，是<span class="creation-day">第三日</span>。</p>
-                                <div class="verse-reference">创世记 1:9-13</div>
-                            </div>
-                            
-                            <div class="classical-text">
-                                <p><span class="creation-highlight">第三日：万水汇聚，千山拔地而出，千山陆宁，万水海宁。</span>山可青，果能遍野，蔬亦满地，草木丛多，沃果实新。</p>
-                                <p>从实而不虚，夜幕退，晨曦露，三日出。大地生机初现，植物各从其类。</p>
-                                <div class="verse-reference">创世纪 一：九至十三</div>
-                            </div>
-                            
-                            <div class="english-text">
-                                <p><span class="creation-highlight">And God said, "Let the water under the sky be gathered to one place, and let dry ground appear."</span> And it was so. God called the dry ground "land," and the gathered waters he called "seas."</p>
-                                <p>Then God said, "Let the land produce vegetation: seed-bearing plants and trees on the land that bear fruit with seed in it, according to their various kinds." And it was so. And there was evening, and there was morning—the <span class="creation-day">third day</span>.</p>
-                                <div class="verse-reference">Genesis 1:9-13</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 第四日 -->
-            <div class="day-section" id="day4">
-                <div class="day-header">
-                    <div class="day-title">
-                        <div class="day-number">四</div>
-                        <h2>第四日 · 日月星辰</h2>
-                    </div>
-                    <div class="day-nav">
-                        <button class="nav-btn" id="prevDay4">
-                            <span>上一日</span>
-                        </button>
-                        <button class="nav-btn" id="nextDay4">
-                            <span>下一日</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="content-wrapper">
-                    <div class="image-section">
-                        <img src="https://xishesherukudiyige-1329755034.cos.ap-chongqing.myqcloud.com/%E5%9C%A3%E7%BB%8F%E6%95%85%E4%BA%8B%E5%88%9B%E4%BD%9C/%E5%9B%9B%E6%97%A5.jpg" alt="第四日">
-                    </div>
-                    
-                    <div class="text-section">
-                        <div class="language-tabs">
-                            <button class="tab-btn active" data-tab="chinese">中文</button>
-                            <button class="tab-btn" data-tab="classical">文言文</button>
-                            <button class="tab-btn" data-tab="english">英文</button>
-                        </div>
-                        
-                        <div class="text-content">
-                            <div class="chinese-text active">
-                                <p><span class="creation-highlight">神说："天上要有光体，可以分昼夜，作记号，定节令、日子、年岁。"</span></p>
-                                <p>于是神造了两个大光，大的管昼，小的管夜，又造众星。神把这些光摆列在天空，普照在地上。有晚上，有早晨，是<span class="creation-day">第四日</span>。</p>
-                                <div class="verse-reference">创世记 1:14-19</div>
-                            </div>
-                            
-                            <div class="classical-text">
-                                <p><span class="creation-highlight">第四日：光自苍穹而空明，定时令，开季节气，以主之光，见地之新明。</span>逐日追月，众星携宇而立。</p>
-                                <p>日月星辰，各司其职，昼夜交替，四季分明，天地秩序初成。</p>
-                                <div class="verse-reference">创世纪 一：十四至十九</div>
-                            </div>
-                            
-                            <div class="english-text">
-                                <p><span class="creation-highlight">And God said, "Let there be lights in the expanse of the sky to separate the day from the night, and let them serve as signs to mark seasons and days and years."</span></p>
-                                <p>God made two great lights—the greater light to govern the day and the lesser light to govern the night. He also made the stars. God set them in the expanse of the sky to give light on the earth, to govern the day and the night, and to separate light from darkness. And there was evening, and there was morning—the <span class="creation-day">fourth day</span>.</p>
-                                <div class="verse-reference">Genesis 1:14-19</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 第五日 -->
-            <div class="day-section" id="day5">
-                <div class="day-header">
-                    <div class="day-title">
-                        <div class="day-number">五</div>
-                        <h2>第五日 · 鱼类与飞鸟</h2>
-                    </div>
-                    <div class="day-nav">
-                        <button class="nav-btn" id="prevDay5">
-                            <span>上一日</span>
-                        </button>
-                        <button class="nav-btn" id="nextDay5">
-                            <span>下一日</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="content-wrapper">
-                    <div class="image-section">
-                        <img src="https://xishesherukudiyige-1329755034.cos.ap-chongqing.myqcloud.com/%E5%9C%A3%E7%BB%8F%E6%95%85%E4%BA%8B%E5%88%9B%E4%BD%9C/%E7%AC%AC%E4%BA%94%E6%97%A5.jpg" alt="第五日">
-                    </div>
-                    
-                    <div class="text-section">
-                        <div class="language-tabs">
-                            <button class="tab-btn active" data-tab="chinese">中文</button>
-                            <button class="tab-btn" data-tab="classical">文言文</button>
-                            <button class="tab-btn" data-tab="english">英文</button>
-                        </div>
-                        
-                        <div class="text-content">
-                            <div class="chinese-text active">
-                                <p><span class="creation-highlight">神说："水要多多滋生有生命的物；要有雀鸟飞在地面以上，天空之中。"</span></p>
-                                <p>神就造出大鱼和水中所滋生各种有生命的动物，各从其类；又造出各种飞鸟，各从其类。<span class="blessing">神赐福给这一切，说："滋生繁多，充满海中的水；雀鸟也要多生在地上。"</span></p>
-                                <p>有晚上，有早晨，是<span class="creation-day">第五日</span>。</p>
-                                <div class="verse-reference">创世记 1:20-23</div>
-                            </div>
-                            
-                            <div class="classical-text">
-                                <p><span class="creation-highlight">第五日：泉水滋养万物，飞鸟穿游穹庐之下，碧海亦安，水滋万物。</span>追，是以鱼翔浅底，鹰击长空。</p>
-                                <p>神赐福于海空之物，令其滋生繁多，充满水域天空，天地之间始有生机。</p>
-                                <div class="verse-reference">创世纪 一：二十至二十三</div>
-                            </div>
-                            
-                            <div class="english-text">
-                                <p><span class="creation-highlight">And God said, "Let the water teem with living creatures, and let birds fly above the earth across the expanse of the sky."</span></p>
-                                <p>So God created the great creatures of the sea and every living and moving thing with which the water teems, according to their kinds, and every winged bird according to its kind. <span class="blessing">God blessed them and said, "Be fruitful and increase in number and fill the water in the seas, and let the birds increase on the earth."</span></p>
-                                <p>And there was evening, and there was morning—the <span class="creation-day">fifth day</span>.</p>
-                                <div class="verse-reference">Genesis 1:20-23</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 第六日 -->
-            <div class="day-section" id="day6">
-                <div class="day-header">
-                    <div class="day-title">
-                        <div class="day-number">六</div>
-                        <h2>第六日 · 动物与人类</h2>
-                    </div>
-                    <div class="day-nav">
-                        <button class="nav-btn" id="prevDay6">
-                            <span>上一日</span>
-                        </button>
-                        <button class="nav-btn" id="nextDay6">
-                            <span>下一日</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="content-wrapper">
-                    <div class="image-section">
-                        <img src="https://xishesherukudiyige-1329755034.cos.ap-chongqing.myqcloud.com/%E5%9C%A3%E7%BB%8F%E6%95%85%E4%BA%8B%E5%88%9B%E4%BD%9C/%E7%AC%AC%E5%85%AD%E6%97%A5.jpg" alt="第六日">
-                    </div>
-                    
-                    <div class="text-section">
-                        <div class="language-tabs">
-                            <button class="tab-btn active" data-tab="chinese">中文</button>
-                            <button class="tab-btn" data-tab="classical">文言文</button>
-                            <button class="tab-btn" data-tab="english">英文</button>
-                        </div>
-                        
-                        <div class="text-content">
-                            <div class="chinese-text active">
-                                <p><span class="creation-highlight">神说："地要生出活物来，各从其类；牲畜、昆虫、野兽，各从其类。"</span>事就这样成了。</p>
-                                <p>神说："我们要照着我们的形象、按着我们的样式造人，使他们管理海里的鱼、空中的鸟、地上的牲畜和全地，并地上所爬的一切昆虫。"</p>
-                                <p><span class="creation-highlight">神就照着自己的形象造人，乃是照着他的形象造男造女。</span> <span class="blessing">神赐福给他们，又对他们说："要生养众多，遍满地面，治理这地，也要管理海里的鱼、空中的鸟，和地上各样行动的活物。"</span></p>
-                                <p>有晚上，有早晨，是<span class="creation-day">第六日</span>。</p>
-                                <div class="verse-reference">创世记 1:24-31</div>
-                            </div>
-                            
-                            <div class="classical-text">
-                                <p><span class="creation-highlight">第六日：碧海苍穹万物生，主定宜兴，勿从其类，人来，一应俱全。</span></p>
-                                <p>神按己形造人，分男女，赐福于人，令其管理万物，治理全地。</p>
-                                <p>天地万物皆备，创造之功大成。</p>
-                                <div class="verse-reference">创世纪 一：二十四至三十一</div>
-                            </div>
-                            
-                            <div class="english-text">
-                                <p><span class="creation-highlight">And God said, "Let the land produce living creatures according to their kinds: livestock, creatures that move along the ground, and wild animals, each according to its kind."</span> And it was so.</p>
-                                <p>Then God said, "Let us make man in our image, in our likeness, and let them rule over the fish of the sea and the birds of the air, over the livestock, over all the earth, and over all the creatures that move along the ground."</p>
-                                <p><span class="creation-highlight">So God created man in his own image, in the image of God he created him; male and female he created them.</span> <span class="blessing">God blessed them and said to them, "Be fruitful and increase in number; fill the earth and subdue it. Rule over the fish of the sea and the birds of the air and over every living creature that moves on the ground."</span></p>
-                                <p>And there was evening, and there was morning—the <span class="creation-day">sixth day</span>.</p>
-                                <div class="verse-reference">Genesis 1:24-31</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 第七日 -->
-            <div class="day-section" id="day7">
-                <div class="day-header">
-                    <div class="day-title">
-                        <div class="day-number">七</div>
-                        <h2>第七日 · 安息与赐福</h2>
-                    </div>
-                    <div class="day-nav">
-                        <button class="nav-btn" id="prevDay7">
-                            <span>上一日</span>
-                        </button>
-                        <button class="nav-btn" id="nextDay7" disabled>
-                            <span>下一日</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="content-wrapper">
-                    <div class="image-section">
-                        <img src="https://xishesherukudiyige-1329755034.cos.ap-chongqing.myqcloud.com/%E5%9C%A3%E7%BB%8F%E6%95%85%E4%BA%8B%E5%88%9B%E4%BD%9C/%E4%B8%83%E6%97%A5.jpg" alt="第七日">
-                    </div>
-                    
-                    <div class="text-section">
-                        <div class="language-tabs">
-                            <button class="tab-btn active" data-tab="chinese">中文</button>
-                            <button class="tab-btn" data-tab="classical">文言文</button>
-                            <button class="tab-btn" data-tab="english">英文</button>
-                        </div>
-                        
-                        <div class="text-content">
-                            <div class="chinese-text active">
-                                <p><span class="creation-highlight">天地万物都造齐了。</span>到第七日，神造物的工已经完毕，就在第七日歇了他一切的工，安息了。</p>
-                                <p><span class="blessing">神赐福给第七日，定为圣日；</span>因为在这日，神歇了他一切创造的工，就安息了。</p>
-                                <p>神看着一切所造的都甚好。这是创造的高峰与完成。</p>
-                                <div class="verse-reference">创世记 2:1-3</div>
-                            </div>
-                            
-                            <div class="classical-text">
-                                <p><span class="creation-highlight">第七日：定圣日，恩息。</span></p>
-                                <p>天地既成，万物皆备，创造之功毕。神于第七日安息，赐福此日，定为圣日。</p>
-                                <p>观其所造，尽善尽美，天地和谐，万物有序。</p>
-                                <div class="verse-reference">创世纪 二：一至三</div>
-                            </div>
-                            
-                            <div class="english-text">
-                                <p><span class="creation-highlight">Thus the heavens and the earth were completed in all their vast array.</span> By the seventh day God had finished the work he had been doing; so on the seventh day he rested from all his work.</p>
-                                <p><span class="blessing">And God blessed the seventh day and made it holy,</span> because on it he rested from all the work of creating that he had done.</p>
-                                <p>God saw all that he had made, and it was very good. This marks the completion and perfection of creation.</p>
-                                <div class="verse-reference">Genesis 2:1-3</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 导航点 -->
-            <div class="days-navigation">
-                <div class="day-dot active" data-day="0">起</div>
-                <div class="day-dot" data-day="1">一</div>
-                <div class="day-dot" data-day="2">二</div>
-                <div class="day-dot" data-day="3">三</div>
-                <div class="day-dot" data-day="4">四</div>
-                <div class="day-dot" data-day="5">五</div>
-                <div class="day-dot" data-day="6">六</div>
-                <div class="day-dot" data-day="7">七</div>
             </div>
         </div>
-        
-        <footer>
-            <p>圣经创世故事三语对照绘本 | 中文 · 文言文 · 英文</p>
-            <p>图片资源由用户提供，内容基于《创世记》第一章改编</p>
-        </footer>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // 当前显示的天数索引（0-7）
-            let currentDay = 0;
-            const totalDays = 8; // 从0到7共8个部分
-            
-            // 获取所有天数部分
-            const daySections = document.querySelectorAll('.day-section');
-            
-            // 获取所有天数导航点
-            const dayDots = document.querySelectorAll('.day-dot');
-            
-            // 触摸滑动相关变量
-            let touchStartX = 0;
-            let touchEndX = 0;
-            let isSwiping = false;
-            
-            // 设置初始状态
-            updateNavigation();
-            
-            // 顶部语言选择器功能
-            const langButtons = document.querySelectorAll('.lang-btn');
-            langButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // 移除所有按钮的active类
-                    langButtons.forEach(btn => btn.classList.remove('active'));
-                    // 给当前点击的按钮添加active类
-                    this.classList.add('active');
-                    
-                    const lang = this.getAttribute('data-lang');
-                    switchLanguage(lang);
-                });
-            });
-            
-            // 切换语言函数
-            function switchLanguage(lang) {
-                // 获取当前活跃的天数部分
-                const activeSection = document.querySelector('.day-section.active');
-                
-                // 获取该部分的所有标签按钮
-                const tabButtons = activeSection.querySelectorAll('.tab-btn');
-                
-                // 移除所有标签按钮的active类
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                
-                // 根据语言选择对应的标签
-                let targetTab;
-                if (lang === 'chinese') targetTab = activeSection.querySelector('.tab-btn[data-tab="chinese"]');
-                else if (lang === 'classical') targetTab = activeSection.querySelector('.tab-btn[data-tab="classical"]');
-                else if (lang === 'english') targetTab = activeSection.querySelector('.tab-btn[data-tab="english"]');
-                
-                // 激活对应的标签
-                if (targetTab) {
-                    targetTab.classList.add('active');
-                    
-                    // 切换文本内容
-                    const textContents = activeSection.querySelectorAll('.text-content > div');
-                    textContents.forEach(content => content.classList.remove('active'));
-                    
-                    if (lang === 'chinese') activeSection.querySelector('.chinese-text').classList.add('active');
-                    else if (lang === 'classical') activeSection.querySelector('.classical-text').classList.add('active');
-                    else if (lang === 'english') activeSection.querySelector('.english-text').classList.add('active');
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script type="module">
+        // Bible locations data
+        const bibleLocations = {
+            zh: {
+                jerusalem: {
+                    name: "耶路撒冷",
+                    subtitle: "Jerusalem - 三大宗教圣地",
+                    lat: 31.7683,
+                    lng: 35.2137,
+                    description: "耶路撒冷是犹太教、基督教和伊斯兰教的圣地，被称为'圣城'。",
+                    significance: "这里是耶稣受难、复活和升天的地点，也是所罗门王建造第一圣殿的地方。",
+                    verses: "诗篇122:6 - '你们要为耶路撒冷求平安。耶路撒冷啊，爱你的人必然兴旺。'",
+                    events: [
+                        "耶稣在此受难、复活、升天",
+                        "所罗门建造第一圣殿",
+                        "耶稣在此教导和行神迹"
+                    ]
+                },
+                bethlehem: {
+                    name: "伯利恒",
+                    subtitle: "Bethlehem - 耶稣诞生地",
+                    lat: 31.7054,
+                    lng: 35.2024,
+                    description: "伯利恒是大卫王的故乡，也是耶稣基督的诞生地。",
+                    significance: "这里是弥赛亚诞生的地方，实现了旧约圣经的预言。",
+                    verses: "马太福音2:1 - '当希律王的时候，耶稣生在犹太的伯利恒。'",
+                    events: [
+                        "耶稣基督诞生",
+                        "博士来朝拜",
+                        "大卫王出生"
+                    ]
+                },
+                nazareth: {
+                    name: "拿撒勒",
+                    subtitle: "Nazareth - 耶稣成长地",
+                    lat: 32.7035,
+                    lng: 35.2959,
+                    description: "拿撒勒是耶稣度过童年和青年时期的地方。",
+                    significance: "耶稣被称为'拿撒勒人'，在这里成长并学会木匠手艺。",
+                    verses: "马太福音2:23 - '到了一座城，名叫拿撒勒，就住在那里。'",
+                    events: [
+                        "耶稣在此成长",
+                        "约瑟和马利亚居住于此",
+                        "耶稣开始公开传道"
+                    ]
+                },
+                galilee: {
+                    name: "加利利海",
+                    subtitle: "Sea of Galilee - 耶稣传道区域",
+                    lat: 32.8333,
+                    lng: 35.5833,
+                    description: "加利利海是耶稣大部分神迹和教导发生的地方。",
+                    significance: "这里是耶稣呼召门徒、行神迹和教导的重要场所。",
+                    verses: "马太福音4:18 - '耶稣在加利利海边行走，看见弟兄二人。'",
+                    events: [
+                        "耶稣行走在水面上",
+                        "五饼二鱼的神迹",
+                        "呼召彼得等门徒"
+                    ]
+                },
+                jordan: {
+                    name: "约旦河",
+                    subtitle: "Jordan River - 施洗约翰施洗处",
+                    lat: 31.8333,
+                    lng: 35.5833,
+                    description: "约旦河是以色列人进入应许之地和耶稣受洗的地方。",
+                    significance: "施洗约翰在此为人施洗，耶稣也在这里接受洗礼。",
+                    verses: "马太福音3:13 - '当下，耶稣从加利利来到约旦河，见了约翰，要受他的洗。'",
+                    events: [
+                        "耶稣接受洗礼",
+                        "施洗约翰传道",
+                        "以色列人过约旦河"
+                    ]
+                },
+                sinai: {
+                    name: "西奈山",
+                    subtitle: "Mount Sinai - 摩西接受十诫",
+                    lat: 28.5392,
+                    lng: 33.9753,
+                    description: "西奈山是摩西接受十诫和律法的地方。",
+                    significance: "这里是神与摩西相遇，颁布十诫和律法的神圣之地。",
+                    verses: "出埃及记19:20 - '耶和华降临在西奈山顶上，耶和华召摩西上山顶。'",
+                    events: [
+                        "摩西接受十诫",
+                        "神颁布律法",
+                        "以色列人安营"
+                    ]
+                },
+                redsea: {
+                    name: "红海",
+                    subtitle: "Red Sea - 摩西分红海",
+                    lat: 27.5,
+                    lng: 34.8,
+                    description: "红海是摩西带领以色列人出埃及时神迹分开海水的地方。",
+                    significance: "神在这里施行大神迹，分开红海让以色列人安全通过。",
+                    verses: "出埃及记14:21 - '摩西向海伸杖，耶和华便用大东风，使海水一夜退去。'",
+                    events: [
+                        "红海分开神迹",
+                        "以色列人安全通过",
+                        "法老军队被淹没"
+                    ]
+                },
+                jericho: {
+                    name: "耶利哥",
+                    subtitle: "Jericho - 古城墙倒塌",
+                    lat: 31.8704,
+                    lng: 35.4437,
+                    description: "耶利哥是以色列人进入迦南地时攻下的第一座城市。",
+                    significance: "这里的城墙因以色列人的信心和神的干预而倒塌。",
+                    verses: "约书亚记6:20 - '百姓便呼喊，祭司也吹角。百姓听见角声，便大声呼喊，城墙就塌陷。'",
+                    events: [
+                        "城墙倒塌神迹",
+                        "喇合得救",
+                        "以色列人进入迦南"
+                    ]
+                },
+                caesarea: {
+                    name: "该撒利亚",
+                    subtitle: "Caesarea - 罗马行政中心",
+                    lat: 32.5027,
+                    lng: 34.9055,
+                    description: "该撒利亚是罗马统治时期的行政中心，位于地中海沿岸。",
+                    significance: "这里是保罗被囚和受审的地方，也是早期教会的重要中心。",
+                    verses: "使徒行传10:1 - '在该撒利亚有一个人，名叫哥尼流，是意大利营的百夫长。'",
+                    events: [
+                        "哥尼流归主",
+                        "保罗被囚",
+                        "早期教会中心"
+                    ]
+                },
+                samaria: {
+                    name: "撒马利亚",
+                    subtitle: "Samaria - 撒马利亚人区域",
+                    lat: 32.0569,
+                    lng: 35.2897,
+                    description: "撒马利亚是北国以色列的首都，撒马利亚人的居住地。",
+                    significance: "耶稣在此与撒马利亚妇人对话，展现了神的普世救恩。",
+                    verses: "约翰福音4:4 - '必须经过撒马利亚。'",
+                    events: [
+                        "耶稣与撒马利亚妇人对话",
+                        "好撒马利亚人比喻",
+                        "早期福音传播"
+                    ]
+                }
+            },
+            en: {
+                jerusalem: {
+                    name: "Jerusalem",
+                    subtitle: "Jerusalem - Holy City of Three Religions",
+                    lat: 31.7683,
+                    lng: 35.2137,
+                    description: "Jerusalem is a holy city for Judaism, Christianity, and Islam.",
+                    significance: "This is where Jesus was crucified, resurrected, and ascended to heaven.",
+                    verses: "Psalm 122:6 - 'Pray for the peace of Jerusalem: they shall prosper that love thee.'",
+                    events: [
+                        "Jesus was crucified, resurrected, and ascended here",
+                        "Solomon built the First Temple",
+                        "Jesus taught and performed miracles here"
+                    ]
+                },
+                bethlehem: {
+                    name: "Bethlehem",
+                    subtitle: "Bethlehem - Birthplace of Jesus",
+                    lat: 31.7054,
+                    lng: 35.2024,
+                    description: "Bethlehem is the birthplace of King David and Jesus Christ.",
+                    significance: "This is where the Messiah was born, fulfilling Old Testament prophecy.",
+                    verses: "Matthew 2:1 - 'Now when Jesus was born in Bethlehem of Judaea...'",
+                    events: [
+                        "Jesus Christ was born",
+                        "The Magi came to worship",
+                        "King David was born"
+                    ]
+                },
+                nazareth: {
+                    name: "Nazareth",
+                    subtitle: "Nazareth - Where Jesus Grew Up",
+                    lat: 32.7035,
+                    lng: 35.2959,
+                    description: "Nazareth is where Jesus spent his childhood and youth.",
+                    significance: "Jesus was called 'the Nazarene' and grew up here, learning carpentry.",
+                    verses: "Matthew 2:23 - 'And he came and dwelt in a city called Nazareth...'",
+                    events: [
+                        "Jesus grew up here",
+                        "Joseph and Mary lived here",
+                        "Jesus began his public ministry"
+                    ]
+                },
+                galilee: {
+                    name: "Sea of Galilee",
+                    subtitle: "Sea of Galilee - Jesus' Ministry Area",
+                    lat: 32.8333,
+                    lng: 35.5833,
+                    description: "The Sea of Galilee is where most of Jesus' miracles and teachings occurred.",
+                    significance: "This is where Jesus called disciples, performed miracles, and taught.",
+                    verses: "Matthew 4:18 - 'And Jesus, walking by the sea of Galilee, saw two brethren...'",
+                    events: [
+                        "Jesus walked on water",
+                        "The feeding of the 5000",
+                        "Called Peter and other disciples"
+                    ]
+                },
+                jordan: {
+                    name: "Jordan River",
+                    subtitle: "Jordan River - John the Baptist's Baptism Site",
+                    lat: 31.8333,
+                    lng: 35.5833,
+                    description: "The Jordan River is where the Israelites entered the Promised Land and Jesus was baptized.",
+                    significance: "John the Baptist baptized people here, including Jesus.",
+                    verses: "Matthew 3:13 - 'Then cometh Jesus from Galilee to Jordan unto John, to be baptized of him.'",
+                    events: [
+                        "Jesus was baptized",
+                        "John the Baptist preached",
+                        "Israelites crossed the Jordan"
+                    ]
+                },
+                sinai: {
+                    name: "Mount Sinai",
+                    subtitle: "Mount Sinai - Moses Received the Ten Commandments",
+                    lat: 28.5392,
+                    lng: 33.9753,
+                    description: "Mount Sinai is where Moses received the Ten Commandments and the Law.",
+                    significance: "This is where God met Moses and gave the Ten Commandments and the Law.",
+                    verses: "Exodus 19:20 - 'And the Lord came down upon mount Sinai, on the top of the mount...'",
+                    events: [
+                        "Moses received the Ten Commandments",
+                        "God gave the Law",
+                        "Israelites camped here"
+                    ]
+                },
+                redsea: {
+                    name: "Red Sea",
+                    subtitle: "Red Sea - Moses Parted the Waters",
+                    lat: 27.5,
+                    lng: 34.8,
+                    description: "The Red Sea is where Moses led the Israelites out of Egypt through a miraculous parting.",
+                    significance: "God performed a great miracle here, parting the sea for Israel's safe passage.",
+                    verses: "Exodus 14:21 - 'And Moses stretched out his hand over the sea; and the Lord caused the sea to go back...'",
+                    events: [
+                        "The parting of the Red Sea",
+                        "Israelites passed safely",
+                        "Pharaoh's army was drowned"
+                    ]
+                },
+                jericho: {
+                    name: "Jericho",
+                    subtitle: "Jericho - Ancient Walls Fell",
+                    lat: 31.8704,
+                    lng: 35.4437,
+                    description: "Jericho was the first city the Israelites conquered when entering Canaan.",
+                    significance: "The walls here fell through Israel's faith and God's intervention.",
+                    verses: "Joshua 6:20 - '...the people shouted with a great shout, that the wall fell down flat...'",
+                    events: [
+                        "The walls fell miraculously",
+                        "Rahab was saved",
+                        "Israelites entered Canaan"
+                    ]
+                },
+                caesarea: {
+                    name: "Caesarea",
+                    subtitle: "Caesarea - Roman Administrative Center",
+                    lat: 32.5027,
+                    lng: 34.9055,
+                    description: "Caesarea was the administrative center during Roman rule, located on the Mediterranean coast.",
+                    significance: "This is where Paul was imprisoned and tried, and an important early church center.",
+                    verses: "Acts 10:1 - 'There was a certain man in Caesarea called Cornelius, a centurion of the Italian band...'",
+                    events: [
+                        "Cornelius was converted",
+                        "Paul was imprisoned",
+                        "Early church center"
+                    ]
+                },
+                samaria: {
+                    name: "Samaria",
+                    subtitle: "Samaria - Samaritan Region",
+                    lat: 32.0569,
+                    lng: 35.2897,
+                    description: "Samaria was the capital of the northern kingdom of Israel and home of the Samaritans.",
+                    significance: "Jesus spoke with the Samaritan woman here, showing God's universal salvation.",
+                    verses: "John 4:4 - 'And he must needs go through Samaria.'",
+                    events: [
+                        "Jesus spoke with the Samaritan woman",
+                        "The Good Samaritan parable",
+                        "Early gospel spread"
+                    ]
                 }
             }
+        };
+
+        // Route data
+        const routes = {
+            moses: {
+                zh: { name: "摩西出埃及路线", description: "从埃及到应许之地的旅程" },
+                en: { name: "Moses' Exodus Route", description: "Journey from Egypt to the Promised Land" },
+                color: "#8B4513",
+                coordinates: [
+                    [30.0, 31.2], // Egypt
+                    [27.5, 34.8], // Red Sea
+                    [28.5392, 33.9753], // Mount Sinai
+                    [31.0, 35.0], // Wilderness
+                    [31.7683, 35.2137] // Canaan/Jerusalem
+                ]
+            },
+            jesus: {
+                zh: { name: "耶稣传道路线", description: "从拿撒勒到耶路撒冷的教导之旅" },
+                en: { name: "Jesus' Ministry Route", description: "Teaching journey from Nazareth to Jerusalem" },
+                color: "#FFD700",
+                coordinates: [
+                    [32.7035, 35.2959], // Nazareth
+                    [32.85, 35.5], // Cana
+                    [32.88, 35.57], // Capernaum
+                    [32.8333, 35.5833], // Sea of Galilee
+                    [31.7683, 35.2137] // Jerusalem
+                ]
+            },
+            paul: {
+                zh: { name: "保罗传道旅程", description: "从耶路撒冷到罗马的传播福音之旅" },
+                en: { name: "Paul's Missionary Journey", description: "Gospel-spreading journey from Jerusalem to Rome" },
+                color: "#4169E1",
+                coordinates: [
+                    [31.7683, 35.2137], // Jerusalem
+                    [36.2, 36.15], // Antioch
+                    [39.9, 32.8], // Asia Minor
+                    [37.9, 23.7], // Greece
+                    [41.9, 12.5] // Rome
+                ]
+            }
+        };
+
+        let map;
+        let markers = {};
+        let currentRoute = null;
+        let currentLang = 'zh';
+
+        // Initialize map
+        function initMap() {
+            map = L.map('map').setView([31.5, 35.5], 8);
             
-            // 标签切换功能（每个部分内部）
-            document.querySelectorAll('.tab-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    const tab = this.getAttribute('data-tab');
-                    const parentSection = this.closest('.day-section');
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            addMarkers();
+            setupEventListeners();
+        }
+
+        // Add markers for all locations
+        function addMarkers() {
+            const data = bibleLocations[currentLang];
+            
+            Object.keys(data).forEach(key => {
+                const location = data[key];
+                
+                const marker = L.marker([location.lat, location.lng])
+                    .addTo(map)
+                    .bindPopup(`
+                        <div class="custom-popup">
+                            <h3>${location.name}</h3>
+                            <p><strong>${location.subtitle}</strong></p>
+                            <p>${location.description}</p>
+                        </div>
+                    `);
+                
+                marker.on('click', () => showLocationDetails(key));
+                markers[key] = marker;
+            });
+        }
+
+        // Show location details in sidebar
+        function showLocationDetails(locationKey) {
+            const location = bibleLocations[currentLang][locationKey];
+            const sidebar = document.getElementById('sidebar-content');
+            
+            sidebar.innerHTML = `
+                <div class="sidebar-content">
+                    <h2 class="location-title">${location.name}</h2>
+                    <p class="location-subtitle">${location.subtitle}</p>
                     
-                    // 更新顶部语言选择器状态
-                    langButtons.forEach(btn => btn.classList.remove('active'));
-                    if (tab === 'chinese') {
-                        document.querySelector('.lang-btn[data-lang="chinese"]').classList.add('active');
-                    } else if (tab === 'classical') {
-                        document.querySelector('.lang-btn[data-lang="classical"]').classList.add('active');
-                    } else if (tab === 'english') {
-                        document.querySelector('.lang-btn[data-lang="english"]').classList.add('active');
-                    }
+                    <div class="info-section">
+                        <h3>地理坐标</h3>
+                        <p class="coordinates">${location.lat.toFixed(4)}°, ${location.lng.toFixed(4)}°</p>
+                    </div>
                     
-                    // 切换标签
-                    const tabButtons = parentSection.querySelectorAll('.tab-btn');
-                    tabButtons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
+                    <div class="info-section">
+                        <h3>圣经意义</h3>
+                        <p>${location.significance}</p>
+                    </div>
                     
-                    // 切换文本内容
-                    const textContents = parentSection.querySelectorAll('.text-content > div');
-                    textContents.forEach(content => content.classList.remove('active'));
-                    parentSection.querySelector(`.${tab}-text`).classList.add('active');
-                });
-            });
-            
-            // 天数导航点点击事件
-            dayDots.forEach(dot => {
-                dot.addEventListener('click', function() {
-                    const dayIndex = parseInt(this.getAttribute('data-day'));
-                    goToDay(dayIndex);
-                });
-            });
-            
-            // 下一日按钮事件
-            document.querySelectorAll('[id^="nextDay"]').forEach(button => {
-                button.addEventListener('click', function() {
-                    if (currentDay < totalDays - 1) {
-                        goToDay(currentDay + 1);
-                    }
-                });
-            });
-            
-            // 上一日按钮事件
-            document.querySelectorAll('[id^="prevDay"]').forEach(button => {
-                button.addEventListener('click', function() {
-                    if (currentDay > 0) {
-                        goToDay(currentDay - 1);
-                    }
-                });
-            });
-            
-            // 跳转到指定天数的函数
-            function goToDay(dayIndex) {
-                // 隐藏当前天数部分
-                daySections[currentDay].classList.remove('active');
-                dayDots[currentDay].classList.remove('active');
-                
-                // 显示目标天数部分
-                daySections[dayIndex].classList.add('active');
-                dayDots[dayIndex].classList.add('active');
-                
-                // 更新当前天数
-                currentDay = dayIndex;
-                
-                // 更新导航按钮状态
-                updateNavigation();
-                
-                // 滚动到顶部
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                    <div class="info-section">
+                        <h3>相关事件</h3>
+                        ${location.events.map(event => `<p>• ${event}</p>`).join('')}
+                    </div>
+                    
+                    <div class="bible-verse">
+                        <h3>相关经文</h3>
+                        <p>${location.verses}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Draw route on map
+        function drawRoute(routeKey) {
+            if (currentRoute) {
+                map.removeLayer(currentRoute);
             }
             
-            // 更新导航按钮状态
-            function updateNavigation() {
-                // 更新上一日/下一日按钮状态
-                const prevButtons = document.querySelectorAll('[id^="prevDay"]');
-                const nextButtons = document.querySelectorAll('[id^="nextDay"]');
-                
-                prevButtons.forEach(btn => {
-                    if (currentDay === 0) {
-                        btn.disabled = true;
-                        btn.style.opacity = '0.5';
-                    } else {
-                        btn.disabled = false;
-                        btn.style.opacity = '1';
-                    }
-                });
-                
-                nextButtons.forEach(btn => {
-                    if (currentDay === totalDays - 1) {
-                        btn.disabled = true;
-                        btn.style.opacity = '0.5';
-                    } else {
-                        btn.disabled = false;
-                        btn.style.opacity = '1';
-                    }
-                });
-            }
+            const route = routes[routeKey];
+            const data = route[currentLang];
             
-            // 添加键盘导航支持
-            document.addEventListener('keydown', function(event) {
-                if (event.key === 'ArrowRight' || event.key === ' ') {
-                    // 右箭头或空格键：下一日
-                    if (currentDay < totalDays - 1) {
-                        goToDay(currentDay + 1);
-                    }
-                    event.preventDefault();
-                } else if (event.key === 'ArrowLeft') {
-                    // 左箭头：上一日
-                    if (currentDay > 0) {
-                        goToDay(currentDay - 1);
-                    }
-                    event.preventDefault();
-                } else if (event.key >= '1' && event.key <= '7') {
-                    // 数字键1-7：跳转到对应天数（1对应索引1，即第一日）
-                    const dayNum = parseInt(event.key);
-                    goToDay(dayNum);
-                } else if (event.key === '0') {
-                    // 数字0：跳转到起初
-                    goToDay(0);
+            const polyline = L.polyline(route.coordinates, {
+                color: route.color,
+                weight: 4,
+                opacity: 0.8
+            }).addTo(map);
+            
+            polyline.bindPopup(`
+                <div class="custom-popup">
+                    <h3>${data.name}</h3>
+                    <p>${data.description}</p>
+                </div>
+            `);
+            
+            currentRoute = polyline;
+            map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Language switch
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentLang = e.target.dataset.lang;
+                    updateContent();
+                });
+            });
+
+            // Route buttons
+            document.querySelectorAll('.route-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.route-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    const routeKey = e.target.dataset.route;
+                    drawRoute(routeKey);
+                });
+            });
+        }
+
+        // Update content based on language
+        function updateContent() {
+            // Update title
+            document.querySelector('.title').textContent = 
+                currentLang === 'zh' ? '圣经地理互动地图' : 'Interactive Bible Geography Map';
+            
+            // Update welcome message
+            const welcomeMsg = bibleLocations[currentLang].welcome || {
+                zh: {
+                    title: '欢迎来到圣经地理互动地图',
+                    content: '点击地图上的地点标记，了解圣经中的重要地理位置和相关故事。使用左侧的路线按钮，可以查看摩西、耶稣和保罗的行走轨迹。'
+                },
+                en: {
+                    title: 'Welcome to Interactive Bible Geography Map',
+                    content: 'Click on location markers on the map to learn about important biblical places and their stories. Use the route buttons on the left to view the journeys of Moses, Jesus, and Paul.'
                 }
+            }[currentLang];
+            
+            document.querySelector('.welcome-message h2').textContent = welcomeMsg.title;
+            document.querySelector('.welcome-message p').textContent = welcomeMsg.content;
+            
+            // Update route buttons
+            Object.keys(routes).forEach(routeKey => {
+                const btn = document.querySelector(`[data-route="${routeKey}"]`);
+                const route = routes[routeKey][currentLang];
+                btn.innerHTML = `
+                    <strong>${route.name}</strong><br>
+                    <small>${route.description}</small>
+                `;
             });
             
-            // 触摸滑动支持
-            document.addEventListener('touchstart', function(event) {
-                touchStartX = event.changedTouches[0].screenX;
-                isSwiping = true;
-            }, { passive: true });
-            
-            document.addEventListener('touchmove', function(event) {
-                if (!isSwiping) return;
-                touchEndX = event.changedTouches[0].screenX;
-            }, { passive: true });
-            
-            document.addEventListener('touchend', function(event) {
-                if (!isSwiping) return;
-                
-                const swipeThreshold = 50; // 滑动阈值
-                const swipeDistance = touchEndX - touchStartX;
-                
-                // 向右滑动超过阈值：上一日
-                if (swipeDistance > swipeThreshold && currentDay > 0) {
-                    goToDay(currentDay - 1);
-                }
-                // 向左滑动超过阈值：下一日
-                else if (swipeDistance < -swipeThreshold && currentDay < totalDays - 1) {
-                    goToDay(currentDay + 1);
-                }
-                
-                isSwiping = false;
-            }, { passive: true });
-            
-            // 触摸设备优化：移除悬停效果
-            if ('ontouchstart' in window || navigator.maxTouchPoints) {
-                // 添加触摸设备特定样式
-                document.body.classList.add('touch-device');
-                
-                // 优化按钮触摸体验
-                document.querySelectorAll('.nav-btn, .tab-btn, .lang-btn, .day-dot').forEach(btn => {
-                    btn.style.cursor = 'pointer';
-                });
+            // Clear current route
+            if (currentRoute) {
+                map.removeLayer(currentRoute);
+                currentRoute = null;
             }
             
-            // 页面加载后预加载下一张图片（优化体验）
-            function preloadNextImage() {
-                const nextDay = (currentDay + 1) % totalDays;
-                const nextSection = daySections[nextDay];
-                if (nextSection) {
-                    const nextImage = nextSection.querySelector('img');
-                    if (nextImage) {
-                        const img = new Image();
-                        img.src = nextImage.src;
-                    }
-                }
-            }
-            
-            // 每次切换后预加载下一张图片
-            document.addEventListener('dayChanged', function() {
-                setTimeout(preloadNextImage, 100);
-            });
-            
-            // 初始预加载
-            setTimeout(preloadNextImage, 500);
-            
-            // 添加自定义事件用于外部控制
-            window.goToCreationDay = function(dayIndex) {
-                if (dayIndex >= 0 && dayIndex < totalDays) {
-                    goToDay(dayIndex);
-                }
-            };
-            
-            window.switchToLanguage = function(lang) {
-                switchLanguage(lang);
-            };
-        });
+            // Update sidebar to welcome message
+            const sidebar = document.getElementById('sidebar-content');
+            sidebar.innerHTML = `
+                <div class="sidebar-content">
+                    <div class="welcome-message">
+                        <h2>${welcomeMsg.title}</h2>
+                        <p>${welcomeMsg.content}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initMap);
     </script>
 </body>
 </html>
