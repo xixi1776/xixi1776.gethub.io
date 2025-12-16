@@ -1,6 +1,26 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <script>
+      // DO NOT REMOVE THIS SCRIPT
+      // 运行时动态计算 basename
+      (function() {
+        var pathname = window.location.pathname;
+        pathname = pathname.replace(/\/index\.html?$/, '');
+        var basename = pathname || '/';
+        if (basename !== '/' && basename.endsWith('/')) {
+          basename = basename.slice(0, -1);
+        }
+        window.__APP_BASENAME__ = basename;
+
+        // 设置 <base> 标签，让所有相对路径资源正确解析
+        var base = document.createElement('base');
+        // 如果 basename 是 '/'，直接设置为 '/'，否则添加 '/'
+        base.href = basename === '/' ? '/' : basename + '/';
+        document.head.appendChild(base);
+      })();
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>圣经地理互动地图</title>
@@ -356,6 +376,54 @@
             margin-bottom: 0.3rem;
         }
     </style>
+  <script type="module" crossorigin>(function(){const e=document.createElement("link").relList;if(e&&e.supports&&e.supports("modulepreload"))return;for(const s of document.querySelectorAll('link[rel="modulepreload"]'))n(s);new MutationObserver(s=>{for(const i of s)if(i.type==="childList")for(const c of i.addedNodes)c.tagName==="LINK"&&c.rel==="modulepreload"&&n(c)}).observe(document,{childList:!0,subtree:!0});function t(s){const i={};return s.integrity&&(i.integrity=s.integrity),s.referrerPolicy&&(i.referrerPolicy=s.referrerPolicy),s.crossOrigin==="use-credentials"?i.credentials="include":s.crossOrigin==="anonymous"?i.credentials="omit":i.credentials="same-origin",i}function n(s){if(s.ep)return;s.ep=!0;const i=t(s);fetch(s.href,i)}})();const h={zh:{jerusalem:{name:"耶路撒冷",subtitle:"Jerusalem - 三大宗教圣地",lat:31.7683,lng:35.2137,description:"耶路撒冷是犹太教、基督教和伊斯兰教的圣地，被称为'圣城'。",significance:"这里是耶稣受难、复活和升天的地点，也是所罗门王建造第一圣殿的地方。",verses:"诗篇122:6 - '你们要为耶路撒冷求平安。耶路撒冷啊，爱你的人必然兴旺。'",events:["耶稣在此受难、复活、升天","所罗门建造第一圣殿","耶稣在此教导和行神迹"]},bethlehem:{name:"伯利恒",subtitle:"Bethlehem - 耶稣诞生地",lat:31.7054,lng:35.2024,description:"伯利恒是大卫王的故乡，也是耶稣基督的诞生地。",significance:"这里是弥赛亚诞生的地方，实现了旧约圣经的预言。",verses:"马太福音2:1 - '当希律王的时候，耶稣生在犹太的伯利恒。'",events:["耶稣基督诞生","博士来朝拜","大卫王出生"]},nazareth:{name:"拿撒勒",subtitle:"Nazareth - 耶稣成长地",lat:32.7035,lng:35.2959,description:"拿撒勒是耶稣度过童年和青年时期的地方。",significance:"耶稣被称为'拿撒勒人'，在这里成长并学会木匠手艺。",verses:"马太福音2:23 - '到了一座城，名叫拿撒勒，就住在那里。'",events:["耶稣在此成长","约瑟和马利亚居住于此","耶稣开始公开传道"]},galilee:{name:"加利利海",subtitle:"Sea of Galilee - 耶稣传道区域",lat:32.8333,lng:35.5833,description:"加利利海是耶稣大部分神迹和教导发生的地方。",significance:"这里是耶稣呼召门徒、行神迹和教导的重要场所。",verses:"马太福音4:18 - '耶稣在加利利海边行走，看见弟兄二人。'",events:["耶稣行走在水面上","五饼二鱼的神迹","呼召彼得等门徒"]},jordan:{name:"约旦河",subtitle:"Jordan River - 施洗约翰施洗处",lat:31.8333,lng:35.5833,description:"约旦河是以色列人进入应许之地和耶稣受洗的地方。",significance:"施洗约翰在此为人施洗，耶稣也在这里接受洗礼。",verses:"马太福音3:13 - '当下，耶稣从加利利来到约旦河，见了约翰，要受他的洗。'",events:["耶稣接受洗礼","施洗约翰传道","以色列人过约旦河"]},sinai:{name:"西奈山",subtitle:"Mount Sinai - 摩西接受十诫",lat:28.5392,lng:33.9753,description:"西奈山是摩西接受十诫和律法的地方。",significance:"这里是神与摩西相遇，颁布十诫和律法的神圣之地。",verses:"出埃及记19:20 - '耶和华降临在西奈山顶上，耶和华召摩西上山顶。'",events:["摩西接受十诫","神颁布律法","以色列人安营"]},redsea:{name:"红海",subtitle:"Red Sea - 摩西分红海",lat:27.5,lng:34.8,description:"红海是摩西带领以色列人出埃及时神迹分开海水的地方。",significance:"神在这里施行大神迹，分开红海让以色列人安全通过。",verses:"出埃及记14:21 - '摩西向海伸杖，耶和华便用大东风，使海水一夜退去。'",events:["红海分开神迹","以色列人安全通过","法老军队被淹没"]},jericho:{name:"耶利哥",subtitle:"Jericho - 古城墙倒塌",lat:31.8704,lng:35.4437,description:"耶利哥是以色列人进入迦南地时攻下的第一座城市。",significance:"这里的城墙因以色列人的信心和神的干预而倒塌。",verses:"约书亚记6:20 - '百姓便呼喊，祭司也吹角。百姓听见角声，便大声呼喊，城墙就塌陷。'",events:["城墙倒塌神迹","喇合得救","以色列人进入迦南"]},caesarea:{name:"该撒利亚",subtitle:"Caesarea - 罗马行政中心",lat:32.5027,lng:34.9055,description:"该撒利亚是罗马统治时期的行政中心，位于地中海沿岸。",significance:"这里是保罗被囚和受审的地方，也是早期教会的重要中心。",verses:"使徒行传10:1 - '在该撒利亚有一个人，名叫哥尼流，是意大利营的百夫长。'",events:["哥尼流归主","保罗被囚","早期教会中心"]},samaria:{name:"撒马利亚",subtitle:"Samaria - 撒马利亚人区域",lat:32.0569,lng:35.2897,description:"撒马利亚是北国以色列的首都，撒马利亚人的居住地。",significance:"耶稣在此与撒马利亚妇人对话，展现了神的普世救恩。",verses:"约翰福音4:4 - '必须经过撒马利亚。'",events:["耶稣与撒马利亚妇人对话","好撒马利亚人比喻","早期福音传播"]}},en:{jerusalem:{name:"Jerusalem",subtitle:"Jerusalem - Holy City of Three Religions",lat:31.7683,lng:35.2137,description:"Jerusalem is a holy city for Judaism, Christianity, and Islam.",significance:"This is where Jesus was crucified, resurrected, and ascended to heaven.",verses:"Psalm 122:6 - 'Pray for the peace of Jerusalem: they shall prosper that love thee.'",events:["Jesus was crucified, resurrected, and ascended here","Solomon built the First Temple","Jesus taught and performed miracles here"]},bethlehem:{name:"Bethlehem",subtitle:"Bethlehem - Birthplace of Jesus",lat:31.7054,lng:35.2024,description:"Bethlehem is the birthplace of King David and Jesus Christ.",significance:"This is where the Messiah was born, fulfilling Old Testament prophecy.",verses:"Matthew 2:1 - 'Now when Jesus was born in Bethlehem of Judaea...'",events:["Jesus Christ was born","The Magi came to worship","King David was born"]},nazareth:{name:"Nazareth",subtitle:"Nazareth - Where Jesus Grew Up",lat:32.7035,lng:35.2959,description:"Nazareth is where Jesus spent his childhood and youth.",significance:"Jesus was called 'the Nazarene' and grew up here, learning carpentry.",verses:"Matthew 2:23 - 'And he came and dwelt in a city called Nazareth...'",events:["Jesus grew up here","Joseph and Mary lived here","Jesus began his public ministry"]},galilee:{name:"Sea of Galilee",subtitle:"Sea of Galilee - Jesus' Ministry Area",lat:32.8333,lng:35.5833,description:"The Sea of Galilee is where most of Jesus' miracles and teachings occurred.",significance:"This is where Jesus called disciples, performed miracles, and taught.",verses:"Matthew 4:18 - 'And Jesus, walking by the sea of Galilee, saw two brethren...'",events:["Jesus walked on water","The feeding of the 5000","Called Peter and other disciples"]},jordan:{name:"Jordan River",subtitle:"Jordan River - John the Baptist's Baptism Site",lat:31.8333,lng:35.5833,description:"The Jordan River is where the Israelites entered the Promised Land and Jesus was baptized.",significance:"John the Baptist baptized people here, including Jesus.",verses:"Matthew 3:13 - 'Then cometh Jesus from Galilee to Jordan unto John, to be baptized of him.'",events:["Jesus was baptized","John the Baptist preached","Israelites crossed the Jordan"]},sinai:{name:"Mount Sinai",subtitle:"Mount Sinai - Moses Received the Ten Commandments",lat:28.5392,lng:33.9753,description:"Mount Sinai is where Moses received the Ten Commandments and the Law.",significance:"This is where God met Moses and gave the Ten Commandments and the Law.",verses:"Exodus 19:20 - 'And the Lord came down upon mount Sinai, on the top of the mount...'",events:["Moses received the Ten Commandments","God gave the Law","Israelites camped here"]},redsea:{name:"Red Sea",subtitle:"Red Sea - Moses Parted the Waters",lat:27.5,lng:34.8,description:"The Red Sea is where Moses led the Israelites out of Egypt through a miraculous parting.",significance:"God performed a great miracle here, parting the sea for Israel's safe passage.",verses:"Exodus 14:21 - 'And Moses stretched out his hand over the sea; and the Lord caused the sea to go back...'",events:["The parting of the Red Sea","Israelites passed safely","Pharaoh's army was drowned"]},jericho:{name:"Jericho",subtitle:"Jericho - Ancient Walls Fell",lat:31.8704,lng:35.4437,description:"Jericho was the first city the Israelites conquered when entering Canaan.",significance:"The walls here fell through Israel's faith and God's intervention.",verses:"Joshua 6:20 - '...the people shouted with a great shout, that the wall fell down flat...'",events:["The walls fell miraculously","Rahab was saved","Israelites entered Canaan"]},caesarea:{name:"Caesarea",subtitle:"Caesarea - Roman Administrative Center",lat:32.5027,lng:34.9055,description:"Caesarea was the administrative center during Roman rule, located on the Mediterranean coast.",significance:"This is where Paul was imprisoned and tried, and an important early church center.",verses:"Acts 10:1 - 'There was a certain man in Caesarea called Cornelius, a centurion of the Italian band...'",events:["Cornelius was converted","Paul was imprisoned","Early church center"]},samaria:{name:"Samaria",subtitle:"Samaria - Samaritan Region",lat:32.0569,lng:35.2897,description:"Samaria was the capital of the northern kingdom of Israel and home of the Samaritans.",significance:"Jesus spoke with the Samaritan woman here, showing God's universal salvation.",verses:"John 4:4 - 'And he must needs go through Samaria.'",events:["Jesus spoke with the Samaritan woman","The Good Samaritan parable","Early gospel spread"]}}},d={moses:{zh:{name:"摩西出埃及路线",description:"从埃及到应许之地的旅程"},en:{name:"Moses' Exodus Route",description:"Journey from Egypt to the Promised Land"},color:"#8B4513",coordinates:[[30,31.2],[27.5,34.8],[28.5392,33.9753],[31,35],[31.7683,35.2137]]},jesus:{zh:{name:"耶稣传道路线",description:"从拿撒勒到耶路撒冷的教导之旅"},en:{name:"Jesus' Ministry Route",description:"Teaching journey from Nazareth to Jerusalem"},color:"#FFD700",coordinates:[[32.7035,35.2959],[32.85,35.5],[32.88,35.57],[32.8333,35.5833],[31.7683,35.2137]]},paul:{zh:{name:"保罗传道旅程",description:"从耶路撒冷到罗马的传播福音之旅"},en:{name:"Paul's Missionary Journey",description:"Gospel-spreading journey from Jerusalem to Rome"},color:"#4169E1",coordinates:[[31.7683,35.2137],[36.2,36.15],[39.9,32.8],[37.9,23.7],[41.9,12.5]]}};let o,l=null,r="zh";function u(){o=L.map("map").setView([31.5,35.5],8),L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap contributors"}).addTo(o),m(),f()}function m(){const a=h[r];Object.keys(a).forEach(e=>{const t=a[e];L.marker([t.lat,t.lng]).addTo(o).bindPopup(`
+                        <div class="custom-popup">
+                            <h3>${t.name}</h3>
+                            <p><strong>${t.subtitle}</strong></p>
+                            <p>${t.description}</p>
+                        </div>
+                    `).on("click",()=>p(e))})}function p(a){const e=h[r][a],t=document.getElementById("sidebar-content");t.innerHTML=`
+                <div class="sidebar-content">
+                    <h2 class="location-title">${e.name}</h2>
+                    <p class="location-subtitle">${e.subtitle}</p>
+                    
+                    <div class="info-section">
+                        <h3>地理坐标</h3>
+                        <p class="coordinates">${e.lat.toFixed(4)}°, ${e.lng.toFixed(4)}°</p>
+                    </div>
+                    
+                    <div class="info-section">
+                        <h3>圣经意义</h3>
+                        <p>${e.significance}</p>
+                    </div>
+                    
+                    <div class="info-section">
+                        <h3>相关事件</h3>
+                        ${e.events.map(n=>`<p>• ${n}</p>`).join("")}
+                    </div>
+                    
+                    <div class="bible-verse">
+                        <h3>相关经文</h3>
+                        <p>${e.verses}</p>
+                    </div>
+                </div>
+            `}function g(a){l&&o.removeLayer(l);const e=d[a],t=e[r],n=L.polyline(e.coordinates,{color:e.color,weight:4,opacity:.8}).addTo(o);n.bindPopup(`
+                <div class="custom-popup">
+                    <h3>${t.name}</h3>
+                    <p>${t.description}</p>
+                </div>
+            `),l=n,o.fitBounds(n.getBounds(),{padding:[20,20]})}function f(){document.querySelectorAll(".lang-btn").forEach(a=>{a.addEventListener("click",e=>{document.querySelectorAll(".lang-btn").forEach(t=>t.classList.remove("active")),e.target.classList.add("active"),r=e.target.dataset.lang,v()})}),document.querySelectorAll(".route-btn").forEach(a=>{a.addEventListener("click",e=>{document.querySelectorAll(".route-btn").forEach(n=>n.classList.remove("active")),e.target.classList.add("active");const t=e.target.dataset.route;g(t)})})}function v(){document.querySelector(".title").textContent=r==="zh"?"圣经地理互动地图":"Interactive Bible Geography Map";const a=h[r].welcome||{zh:{title:"欢迎来到圣经地理互动地图",content:"点击地图上的地点标记，了解圣经中的重要地理位置和相关故事。使用左侧的路线按钮，可以查看摩西、耶稣和保罗的行走轨迹。"},en:{title:"Welcome to Interactive Bible Geography Map",content:"Click on location markers on the map to learn about important biblical places and their stories. Use the route buttons on the left to view the journeys of Moses, Jesus, and Paul."}}[r];document.querySelector(".welcome-message h2").textContent=a.title,document.querySelector(".welcome-message p").textContent=a.content,Object.keys(d).forEach(t=>{const n=document.querySelector(`[data-route="${t}"]`),s=d[t][r];n.innerHTML=`
+                    <strong>${s.name}</strong><br>
+                    <small>${s.description}</small>
+                `}),l&&(o.removeLayer(l),l=null);const e=document.getElementById("sidebar-content");e.innerHTML=`
+                <div class="sidebar-content">
+                    <div class="welcome-message">
+                        <h2>${a.title}</h2>
+                        <p>${a.content}</p>
+                    </div>
+                </div>
+            `}document.addEventListener("DOMContentLoaded",u);
+</script>
 </head>
 <body>
     <div class="container">
@@ -398,507 +466,5 @@
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
-    <script type="module">
-        // Bible locations data
-        const bibleLocations = {
-            zh: {
-                jerusalem: {
-                    name: "耶路撒冷",
-                    subtitle: "Jerusalem - 三大宗教圣地",
-                    lat: 31.7683,
-                    lng: 35.2137,
-                    description: "耶路撒冷是犹太教、基督教和伊斯兰教的圣地，被称为'圣城'。",
-                    significance: "这里是耶稣受难、复活和升天的地点，也是所罗门王建造第一圣殿的地方。",
-                    verses: "诗篇122:6 - '你们要为耶路撒冷求平安。耶路撒冷啊，爱你的人必然兴旺。'",
-                    events: [
-                        "耶稣在此受难、复活、升天",
-                        "所罗门建造第一圣殿",
-                        "耶稣在此教导和行神迹"
-                    ]
-                },
-                bethlehem: {
-                    name: "伯利恒",
-                    subtitle: "Bethlehem - 耶稣诞生地",
-                    lat: 31.7054,
-                    lng: 35.2024,
-                    description: "伯利恒是大卫王的故乡，也是耶稣基督的诞生地。",
-                    significance: "这里是弥赛亚诞生的地方，实现了旧约圣经的预言。",
-                    verses: "马太福音2:1 - '当希律王的时候，耶稣生在犹太的伯利恒。'",
-                    events: [
-                        "耶稣基督诞生",
-                        "博士来朝拜",
-                        "大卫王出生"
-                    ]
-                },
-                nazareth: {
-                    name: "拿撒勒",
-                    subtitle: "Nazareth - 耶稣成长地",
-                    lat: 32.7035,
-                    lng: 35.2959,
-                    description: "拿撒勒是耶稣度过童年和青年时期的地方。",
-                    significance: "耶稣被称为'拿撒勒人'，在这里成长并学会木匠手艺。",
-                    verses: "马太福音2:23 - '到了一座城，名叫拿撒勒，就住在那里。'",
-                    events: [
-                        "耶稣在此成长",
-                        "约瑟和马利亚居住于此",
-                        "耶稣开始公开传道"
-                    ]
-                },
-                galilee: {
-                    name: "加利利海",
-                    subtitle: "Sea of Galilee - 耶稣传道区域",
-                    lat: 32.8333,
-                    lng: 35.5833,
-                    description: "加利利海是耶稣大部分神迹和教导发生的地方。",
-                    significance: "这里是耶稣呼召门徒、行神迹和教导的重要场所。",
-                    verses: "马太福音4:18 - '耶稣在加利利海边行走，看见弟兄二人。'",
-                    events: [
-                        "耶稣行走在水面上",
-                        "五饼二鱼的神迹",
-                        "呼召彼得等门徒"
-                    ]
-                },
-                jordan: {
-                    name: "约旦河",
-                    subtitle: "Jordan River - 施洗约翰施洗处",
-                    lat: 31.8333,
-                    lng: 35.5833,
-                    description: "约旦河是以色列人进入应许之地和耶稣受洗的地方。",
-                    significance: "施洗约翰在此为人施洗，耶稣也在这里接受洗礼。",
-                    verses: "马太福音3:13 - '当下，耶稣从加利利来到约旦河，见了约翰，要受他的洗。'",
-                    events: [
-                        "耶稣接受洗礼",
-                        "施洗约翰传道",
-                        "以色列人过约旦河"
-                    ]
-                },
-                sinai: {
-                    name: "西奈山",
-                    subtitle: "Mount Sinai - 摩西接受十诫",
-                    lat: 28.5392,
-                    lng: 33.9753,
-                    description: "西奈山是摩西接受十诫和律法的地方。",
-                    significance: "这里是神与摩西相遇，颁布十诫和律法的神圣之地。",
-                    verses: "出埃及记19:20 - '耶和华降临在西奈山顶上，耶和华召摩西上山顶。'",
-                    events: [
-                        "摩西接受十诫",
-                        "神颁布律法",
-                        "以色列人安营"
-                    ]
-                },
-                redsea: {
-                    name: "红海",
-                    subtitle: "Red Sea - 摩西分红海",
-                    lat: 27.5,
-                    lng: 34.8,
-                    description: "红海是摩西带领以色列人出埃及时神迹分开海水的地方。",
-                    significance: "神在这里施行大神迹，分开红海让以色列人安全通过。",
-                    verses: "出埃及记14:21 - '摩西向海伸杖，耶和华便用大东风，使海水一夜退去。'",
-                    events: [
-                        "红海分开神迹",
-                        "以色列人安全通过",
-                        "法老军队被淹没"
-                    ]
-                },
-                jericho: {
-                    name: "耶利哥",
-                    subtitle: "Jericho - 古城墙倒塌",
-                    lat: 31.8704,
-                    lng: 35.4437,
-                    description: "耶利哥是以色列人进入迦南地时攻下的第一座城市。",
-                    significance: "这里的城墙因以色列人的信心和神的干预而倒塌。",
-                    verses: "约书亚记6:20 - '百姓便呼喊，祭司也吹角。百姓听见角声，便大声呼喊，城墙就塌陷。'",
-                    events: [
-                        "城墙倒塌神迹",
-                        "喇合得救",
-                        "以色列人进入迦南"
-                    ]
-                },
-                caesarea: {
-                    name: "该撒利亚",
-                    subtitle: "Caesarea - 罗马行政中心",
-                    lat: 32.5027,
-                    lng: 34.9055,
-                    description: "该撒利亚是罗马统治时期的行政中心，位于地中海沿岸。",
-                    significance: "这里是保罗被囚和受审的地方，也是早期教会的重要中心。",
-                    verses: "使徒行传10:1 - '在该撒利亚有一个人，名叫哥尼流，是意大利营的百夫长。'",
-                    events: [
-                        "哥尼流归主",
-                        "保罗被囚",
-                        "早期教会中心"
-                    ]
-                },
-                samaria: {
-                    name: "撒马利亚",
-                    subtitle: "Samaria - 撒马利亚人区域",
-                    lat: 32.0569,
-                    lng: 35.2897,
-                    description: "撒马利亚是北国以色列的首都，撒马利亚人的居住地。",
-                    significance: "耶稣在此与撒马利亚妇人对话，展现了神的普世救恩。",
-                    verses: "约翰福音4:4 - '必须经过撒马利亚。'",
-                    events: [
-                        "耶稣与撒马利亚妇人对话",
-                        "好撒马利亚人比喻",
-                        "早期福音传播"
-                    ]
-                }
-            },
-            en: {
-                jerusalem: {
-                    name: "Jerusalem",
-                    subtitle: "Jerusalem - Holy City of Three Religions",
-                    lat: 31.7683,
-                    lng: 35.2137,
-                    description: "Jerusalem is a holy city for Judaism, Christianity, and Islam.",
-                    significance: "This is where Jesus was crucified, resurrected, and ascended to heaven.",
-                    verses: "Psalm 122:6 - 'Pray for the peace of Jerusalem: they shall prosper that love thee.'",
-                    events: [
-                        "Jesus was crucified, resurrected, and ascended here",
-                        "Solomon built the First Temple",
-                        "Jesus taught and performed miracles here"
-                    ]
-                },
-                bethlehem: {
-                    name: "Bethlehem",
-                    subtitle: "Bethlehem - Birthplace of Jesus",
-                    lat: 31.7054,
-                    lng: 35.2024,
-                    description: "Bethlehem is the birthplace of King David and Jesus Christ.",
-                    significance: "This is where the Messiah was born, fulfilling Old Testament prophecy.",
-                    verses: "Matthew 2:1 - 'Now when Jesus was born in Bethlehem of Judaea...'",
-                    events: [
-                        "Jesus Christ was born",
-                        "The Magi came to worship",
-                        "King David was born"
-                    ]
-                },
-                nazareth: {
-                    name: "Nazareth",
-                    subtitle: "Nazareth - Where Jesus Grew Up",
-                    lat: 32.7035,
-                    lng: 35.2959,
-                    description: "Nazareth is where Jesus spent his childhood and youth.",
-                    significance: "Jesus was called 'the Nazarene' and grew up here, learning carpentry.",
-                    verses: "Matthew 2:23 - 'And he came and dwelt in a city called Nazareth...'",
-                    events: [
-                        "Jesus grew up here",
-                        "Joseph and Mary lived here",
-                        "Jesus began his public ministry"
-                    ]
-                },
-                galilee: {
-                    name: "Sea of Galilee",
-                    subtitle: "Sea of Galilee - Jesus' Ministry Area",
-                    lat: 32.8333,
-                    lng: 35.5833,
-                    description: "The Sea of Galilee is where most of Jesus' miracles and teachings occurred.",
-                    significance: "This is where Jesus called disciples, performed miracles, and taught.",
-                    verses: "Matthew 4:18 - 'And Jesus, walking by the sea of Galilee, saw two brethren...'",
-                    events: [
-                        "Jesus walked on water",
-                        "The feeding of the 5000",
-                        "Called Peter and other disciples"
-                    ]
-                },
-                jordan: {
-                    name: "Jordan River",
-                    subtitle: "Jordan River - John the Baptist's Baptism Site",
-                    lat: 31.8333,
-                    lng: 35.5833,
-                    description: "The Jordan River is where the Israelites entered the Promised Land and Jesus was baptized.",
-                    significance: "John the Baptist baptized people here, including Jesus.",
-                    verses: "Matthew 3:13 - 'Then cometh Jesus from Galilee to Jordan unto John, to be baptized of him.'",
-                    events: [
-                        "Jesus was baptized",
-                        "John the Baptist preached",
-                        "Israelites crossed the Jordan"
-                    ]
-                },
-                sinai: {
-                    name: "Mount Sinai",
-                    subtitle: "Mount Sinai - Moses Received the Ten Commandments",
-                    lat: 28.5392,
-                    lng: 33.9753,
-                    description: "Mount Sinai is where Moses received the Ten Commandments and the Law.",
-                    significance: "This is where God met Moses and gave the Ten Commandments and the Law.",
-                    verses: "Exodus 19:20 - 'And the Lord came down upon mount Sinai, on the top of the mount...'",
-                    events: [
-                        "Moses received the Ten Commandments",
-                        "God gave the Law",
-                        "Israelites camped here"
-                    ]
-                },
-                redsea: {
-                    name: "Red Sea",
-                    subtitle: "Red Sea - Moses Parted the Waters",
-                    lat: 27.5,
-                    lng: 34.8,
-                    description: "The Red Sea is where Moses led the Israelites out of Egypt through a miraculous parting.",
-                    significance: "God performed a great miracle here, parting the sea for Israel's safe passage.",
-                    verses: "Exodus 14:21 - 'And Moses stretched out his hand over the sea; and the Lord caused the sea to go back...'",
-                    events: [
-                        "The parting of the Red Sea",
-                        "Israelites passed safely",
-                        "Pharaoh's army was drowned"
-                    ]
-                },
-                jericho: {
-                    name: "Jericho",
-                    subtitle: "Jericho - Ancient Walls Fell",
-                    lat: 31.8704,
-                    lng: 35.4437,
-                    description: "Jericho was the first city the Israelites conquered when entering Canaan.",
-                    significance: "The walls here fell through Israel's faith and God's intervention.",
-                    verses: "Joshua 6:20 - '...the people shouted with a great shout, that the wall fell down flat...'",
-                    events: [
-                        "The walls fell miraculously",
-                        "Rahab was saved",
-                        "Israelites entered Canaan"
-                    ]
-                },
-                caesarea: {
-                    name: "Caesarea",
-                    subtitle: "Caesarea - Roman Administrative Center",
-                    lat: 32.5027,
-                    lng: 34.9055,
-                    description: "Caesarea was the administrative center during Roman rule, located on the Mediterranean coast.",
-                    significance: "This is where Paul was imprisoned and tried, and an important early church center.",
-                    verses: "Acts 10:1 - 'There was a certain man in Caesarea called Cornelius, a centurion of the Italian band...'",
-                    events: [
-                        "Cornelius was converted",
-                        "Paul was imprisoned",
-                        "Early church center"
-                    ]
-                },
-                samaria: {
-                    name: "Samaria",
-                    subtitle: "Samaria - Samaritan Region",
-                    lat: 32.0569,
-                    lng: 35.2897,
-                    description: "Samaria was the capital of the northern kingdom of Israel and home of the Samaritans.",
-                    significance: "Jesus spoke with the Samaritan woman here, showing God's universal salvation.",
-                    verses: "John 4:4 - 'And he must needs go through Samaria.'",
-                    events: [
-                        "Jesus spoke with the Samaritan woman",
-                        "The Good Samaritan parable",
-                        "Early gospel spread"
-                    ]
-                }
-            }
-        };
-
-        // Route data
-        const routes = {
-            moses: {
-                zh: { name: "摩西出埃及路线", description: "从埃及到应许之地的旅程" },
-                en: { name: "Moses' Exodus Route", description: "Journey from Egypt to the Promised Land" },
-                color: "#8B4513",
-                coordinates: [
-                    [30.0, 31.2], // Egypt
-                    [27.5, 34.8], // Red Sea
-                    [28.5392, 33.9753], // Mount Sinai
-                    [31.0, 35.0], // Wilderness
-                    [31.7683, 35.2137] // Canaan/Jerusalem
-                ]
-            },
-            jesus: {
-                zh: { name: "耶稣传道路线", description: "从拿撒勒到耶路撒冷的教导之旅" },
-                en: { name: "Jesus' Ministry Route", description: "Teaching journey from Nazareth to Jerusalem" },
-                color: "#FFD700",
-                coordinates: [
-                    [32.7035, 35.2959], // Nazareth
-                    [32.85, 35.5], // Cana
-                    [32.88, 35.57], // Capernaum
-                    [32.8333, 35.5833], // Sea of Galilee
-                    [31.7683, 35.2137] // Jerusalem
-                ]
-            },
-            paul: {
-                zh: { name: "保罗传道旅程", description: "从耶路撒冷到罗马的传播福音之旅" },
-                en: { name: "Paul's Missionary Journey", description: "Gospel-spreading journey from Jerusalem to Rome" },
-                color: "#4169E1",
-                coordinates: [
-                    [31.7683, 35.2137], // Jerusalem
-                    [36.2, 36.15], // Antioch
-                    [39.9, 32.8], // Asia Minor
-                    [37.9, 23.7], // Greece
-                    [41.9, 12.5] // Rome
-                ]
-            }
-        };
-
-        let map;
-        let markers = {};
-        let currentRoute = null;
-        let currentLang = 'zh';
-
-        // Initialize map
-        function initMap() {
-            map = L.map('map').setView([31.5, 35.5], 8);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
-
-            addMarkers();
-            setupEventListeners();
-        }
-
-        // Add markers for all locations
-        function addMarkers() {
-            const data = bibleLocations[currentLang];
-            
-            Object.keys(data).forEach(key => {
-                const location = data[key];
-                
-                const marker = L.marker([location.lat, location.lng])
-                    .addTo(map)
-                    .bindPopup(`
-                        <div class="custom-popup">
-                            <h3>${location.name}</h3>
-                            <p><strong>${location.subtitle}</strong></p>
-                            <p>${location.description}</p>
-                        </div>
-                    `);
-                
-                marker.on('click', () => showLocationDetails(key));
-                markers[key] = marker;
-            });
-        }
-
-        // Show location details in sidebar
-        function showLocationDetails(locationKey) {
-            const location = bibleLocations[currentLang][locationKey];
-            const sidebar = document.getElementById('sidebar-content');
-            
-            sidebar.innerHTML = `
-                <div class="sidebar-content">
-                    <h2 class="location-title">${location.name}</h2>
-                    <p class="location-subtitle">${location.subtitle}</p>
-                    
-                    <div class="info-section">
-                        <h3>地理坐标</h3>
-                        <p class="coordinates">${location.lat.toFixed(4)}°, ${location.lng.toFixed(4)}°</p>
-                    </div>
-                    
-                    <div class="info-section">
-                        <h3>圣经意义</h3>
-                        <p>${location.significance}</p>
-                    </div>
-                    
-                    <div class="info-section">
-                        <h3>相关事件</h3>
-                        ${location.events.map(event => `<p>• ${event}</p>`).join('')}
-                    </div>
-                    
-                    <div class="bible-verse">
-                        <h3>相关经文</h3>
-                        <p>${location.verses}</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Draw route on map
-        function drawRoute(routeKey) {
-            if (currentRoute) {
-                map.removeLayer(currentRoute);
-            }
-            
-            const route = routes[routeKey];
-            const data = route[currentLang];
-            
-            const polyline = L.polyline(route.coordinates, {
-                color: route.color,
-                weight: 4,
-                opacity: 0.8
-            }).addTo(map);
-            
-            polyline.bindPopup(`
-                <div class="custom-popup">
-                    <h3>${data.name}</h3>
-                    <p>${data.description}</p>
-                </div>
-            `);
-            
-            currentRoute = polyline;
-            map.fitBounds(polyline.getBounds(), { padding: [20, 20] });
-        }
-
-        // Setup event listeners
-        function setupEventListeners() {
-            // Language switch
-            document.querySelectorAll('.lang-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-                    e.target.classList.add('active');
-                    currentLang = e.target.dataset.lang;
-                    updateContent();
-                });
-            });
-
-            // Route buttons
-            document.querySelectorAll('.route-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.route-btn').forEach(b => b.classList.remove('active'));
-                    e.target.classList.add('active');
-                    const routeKey = e.target.dataset.route;
-                    drawRoute(routeKey);
-                });
-            });
-        }
-
-        // Update content based on language
-        function updateContent() {
-            // Update title
-            document.querySelector('.title').textContent = 
-                currentLang === 'zh' ? '圣经地理互动地图' : 'Interactive Bible Geography Map';
-            
-            // Update welcome message
-            const welcomeMsg = bibleLocations[currentLang].welcome || {
-                zh: {
-                    title: '欢迎来到圣经地理互动地图',
-                    content: '点击地图上的地点标记，了解圣经中的重要地理位置和相关故事。使用左侧的路线按钮，可以查看摩西、耶稣和保罗的行走轨迹。'
-                },
-                en: {
-                    title: 'Welcome to Interactive Bible Geography Map',
-                    content: 'Click on location markers on the map to learn about important biblical places and their stories. Use the route buttons on the left to view the journeys of Moses, Jesus, and Paul.'
-                }
-            }[currentLang];
-            
-            document.querySelector('.welcome-message h2').textContent = welcomeMsg.title;
-            document.querySelector('.welcome-message p').textContent = welcomeMsg.content;
-            
-            // Update route buttons
-            Object.keys(routes).forEach(routeKey => {
-                const btn = document.querySelector(`[data-route="${routeKey}"]`);
-                const route = routes[routeKey][currentLang];
-                btn.innerHTML = `
-                    <strong>${route.name}</strong><br>
-                    <small>${route.description}</small>
-                `;
-            });
-            
-            // Clear current route
-            if (currentRoute) {
-                map.removeLayer(currentRoute);
-                currentRoute = null;
-            }
-            
-            // Update sidebar to welcome message
-            const sidebar = document.getElementById('sidebar-content');
-            sidebar.innerHTML = `
-                <div class="sidebar-content">
-                    <div class="welcome-message">
-                        <h2>${welcomeMsg.title}</h2>
-                        <p>${welcomeMsg.content}</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', initMap);
-    </script>
 </body>
 </html>
