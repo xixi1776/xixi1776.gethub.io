@@ -1,470 +1,410 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <script>
-      // DO NOT REMOVE THIS SCRIPT
-      // 运行时动态计算 basename
-      (function() {
-        var pathname = window.location.pathname;
-        pathname = pathname.replace(/\/index\.html?$/, '');
-        var basename = pathname || '/';
-        if (basename !== '/' && basename.endsWith('/')) {
-          basename = basename.slice(0, -1);
-        }
-        window.__APP_BASENAME__ = basename;
+  <!-- 动态 base 标签 -->
+  <script>
+    (function() {
+      var pathname = window.location.pathname;
+      pathname = pathname.replace(/\/index\.html?$/, '');
+      var basename = pathname || '/';
+      if (basename !== '/' && basename.endsWith('/')) {
+        basename = basename.slice(0, -1);
+      }
+      window.__APP_BASENAME__ = basename;
+      var base = document.createElement('base');
+      base.href = basename === '/' ? '/' : basename + '/';
+      document.head.appendChild(base);
+    })();
+  </script>
 
-        // 设置 <base> 标签，让所有相对路径资源正确解析
-        var base = document.createElement('base');
-        // 如果 basename 是 '/'，直接设置为 '/'，否则添加 '/'
-        base.href = basename === '/' ? '/' : basename + '/';
-        document.head.appendChild(base);
-      })();
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>昔設Club亲子社团 - 与孩子一起成长的快乐时光</title>
+  <meta name="description" content="昔設Club亲子社团，提供手工制作、徒步研学、小发明设计、公益活动和父母技能孵化等丰富多彩的亲子活动，并支持轻资产创业模式。">
 
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>圣经地理互动地图</title>
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" >
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600&amp;family=Quicksand:wght@400;500;600&amp;display=swap" rel="stylesheet">
-    
-    <style>
-        :root {
-            --primary-color: #161665;
-            --accent-color: #A3A387;
-            --neutral-color: #C544F8;
-            --bg-color: #f8fafc;
-            --text-color: #1e293b;
-            --border-color: #e2e8f0;
-            --shadow-color: rgba(0, 0, 0, 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Work Sans', 'Microsoft YaHei', sans-serif;
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            color: var(--text-color);
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        .container {
-            display: flex;
-            height: 100vh;
-            position: relative;
-        }
-
-        .header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 1000;
-            border-bottom: 1px solid var(--border-color);
-            box-shadow: 0 2px 10px var(--shadow-color);
-        }
-
-        .title {
-            font-family: 'Quicksand', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--primary-color);
-            margin: 0;
-        }
-
-        .language-switch {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .lang-btn {
-            padding: 0.5rem 1rem;
-            border: 2px solid var(--accent-color);
-            background: transparent;
-            color: var(--accent-color);
-            border-radius: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: inherit;
-            font-weight: 500;
-        }
-
-        .lang-btn.active,
-        .lang-btn:hover {
-            background: var(--accent-color);
-            color: white;
-        }
-
-        .map-container {
-            flex: 0 0 60%;
-            height: 100vh;
-            position: relative;
-            padding-top: 80px;
-        }
-
-        #map {
-            width: 100%;
-            height: calc(100% - 80px);
-            border-radius: 0;
-        }
-
-        .sidebar {
-            flex: 0 0 40%;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 1.5rem;
-            overflow-y: auto;
-            border-left: 1px solid var(--border-color);
-            box-shadow: -5px 0 15px var(--shadow-color);
-            padding-top: 100px;
-        }
-
-        .sidebar-content {
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .location-title {
-            font-family: 'Quicksand', sans-serif;
-            font-size: 1.8rem;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-            border-bottom: 3px solid var(--accent-color);
-            padding-bottom: 0.5rem;
-        }
-
-        .location-subtitle {
-            font-size: 1.2rem;
-            color: var(--accent-color);
-            margin-bottom: 1.5rem;
-            font-weight: 500;
-        }
-
-        .info-section {
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: rgba(248, 250, 252, 0.6);
-            border-radius: 12px;
-            border-left: 4px solid var(--accent-color);
-        }
-
-        .info-section h3 {
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .info-section p {
-            line-height: 1.6;
-            margin-bottom: 0.8rem;
-        }
-
-        .coordinates {
-            font-family: 'Courier New', monospace;
-            background: var(--bg-color);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            display: inline-block;
-            font-size: 0.9rem;
-        }
-
-        .bible-verse {
-            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
-            color: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin: 1.5rem 0;
-            font-style: italic;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .bible-verse::before {
-            content: '"';
-            font-size: 4rem;
-            position: absolute;
-            top: -0.5rem;
-            left: 1rem;
-            opacity: 0.3;
-            font-family: Georgia, serif;
-        }
-
-        .route-controls {
-            position: absolute;
-            top: 100px;
-            left: 20px;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 1rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px var(--shadow-color);
-            backdrop-filter: blur(10px);
-        }
-
-        .route-btn {
-            display: block;
-            width: 100%;
-            padding: 0.8rem 1.2rem;
-            margin: 0.5rem 0;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: inherit;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            text-align: left;
-        }
-
-        .route-btn.moses {
-            background: linear-gradient(135deg, #8B4513, #CD853F);
-            color: white;
-        }
-
-        .route-btn.jesus {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            color: #8B4513;
-        }
-
-        .route-btn.paul {
-            background: linear-gradient(135deg, #4169E1, #6495ED);
-            color: white;
-        }
-
-        .route-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px var(--shadow-color);
-        }
-
-        .route-btn.active {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px var(--shadow-color);
-        }
-
-        .welcome-message {
-            text-align: center;
-            padding: 3rem 2rem;
-            color: var(--accent-color);
-        }
-
-        .welcome-message h2 {
-            font-family: 'Quicksand', sans-serif;
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            color: var(--primary-color);
-        }
-
-        .welcome-message p {
-            font-size: 1.1rem;
-            line-height: 1.6;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-            }
-            
-            .map-container {
-                flex: none;
-                height: 50vh;
-                padding-top: 70px;
-            }
-            
-            #map {
-                height: calc(100% - 70px);
-            }
-            
-            .sidebar {
-                flex: none;
-                height: 50vh;
-                border-left: none;
-                border-top: 1px solid var(--border-color);
-                padding-top: 1.5rem;
-            }
-            
-            .header {
-                padding: 0.8rem 1rem;
-            }
-            
-            .title {
-                font-size: 1.2rem;
-            }
-            
-            .route-controls {
-                position: relative;
-                top: auto;
-                left: auto;
-                margin: 1rem;
-                display: flex;
-                flex-wrap: wrap;
-                gap: 0.5rem;
-            }
-            
-            .route-btn {
-                flex: 1;
-                min-width: 120px;
-                margin: 0;
-            }
-        }
-
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 200px;
-            font-size: 1.2rem;
-            color: var(--accent-color);
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid var(--border-color);
-            border-top: 4px solid var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 1rem;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .leaflet-popup-content {
-            font-family: 'Work Sans', sans-serif;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        .custom-popup {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 8px;
-            padding: 1rem;
-            box-shadow: 0 4px 20px var(--shadow-color);
-        }
-
-        .custom-popup h3 {
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-            font-family: 'Quicksand', sans-serif;
-        }
-
-        .custom-popup p {
-            color: var(--text-color);
-            margin-bottom: 0.3rem;
-        }
-    </style>
-  <script type="module" crossorigin>(function(){const e=document.createElement("link").relList;if(e&&e.supports&&e.supports("modulepreload"))return;for(const s of document.querySelectorAll('link[rel="modulepreload"]'))n(s);new MutationObserver(s=>{for(const i of s)if(i.type==="childList")for(const c of i.addedNodes)c.tagName==="LINK"&&c.rel==="modulepreload"&&n(c)}).observe(document,{childList:!0,subtree:!0});function t(s){const i={};return s.integrity&&(i.integrity=s.integrity),s.referrerPolicy&&(i.referrerPolicy=s.referrerPolicy),s.crossOrigin==="use-credentials"?i.credentials="include":s.crossOrigin==="anonymous"?i.credentials="omit":i.credentials="same-origin",i}function n(s){if(s.ep)return;s.ep=!0;const i=t(s);fetch(s.href,i)}})();const h={zh:{jerusalem:{name:"耶路撒冷",subtitle:"Jerusalem - 三大宗教圣地",lat:31.7683,lng:35.2137,description:"耶路撒冷是犹太教、基督教和伊斯兰教的圣地，被称为'圣城'。",significance:"这里是耶稣受难、复活和升天的地点，也是所罗门王建造第一圣殿的地方。",verses:"诗篇122:6 - '你们要为耶路撒冷求平安。耶路撒冷啊，爱你的人必然兴旺。'",events:["耶稣在此受难、复活、升天","所罗门建造第一圣殿","耶稣在此教导和行神迹"]},bethlehem:{name:"伯利恒",subtitle:"Bethlehem - 耶稣诞生地",lat:31.7054,lng:35.2024,description:"伯利恒是大卫王的故乡，也是耶稣基督的诞生地。",significance:"这里是弥赛亚诞生的地方，实现了旧约圣经的预言。",verses:"马太福音2:1 - '当希律王的时候，耶稣生在犹太的伯利恒。'",events:["耶稣基督诞生","博士来朝拜","大卫王出生"]},nazareth:{name:"拿撒勒",subtitle:"Nazareth - 耶稣成长地",lat:32.7035,lng:35.2959,description:"拿撒勒是耶稣度过童年和青年时期的地方。",significance:"耶稣被称为'拿撒勒人'，在这里成长并学会木匠手艺。",verses:"马太福音2:23 - '到了一座城，名叫拿撒勒，就住在那里。'",events:["耶稣在此成长","约瑟和马利亚居住于此","耶稣开始公开传道"]},galilee:{name:"加利利海",subtitle:"Sea of Galilee - 耶稣传道区域",lat:32.8333,lng:35.5833,description:"加利利海是耶稣大部分神迹和教导发生的地方。",significance:"这里是耶稣呼召门徒、行神迹和教导的重要场所。",verses:"马太福音4:18 - '耶稣在加利利海边行走，看见弟兄二人。'",events:["耶稣行走在水面上","五饼二鱼的神迹","呼召彼得等门徒"]},jordan:{name:"约旦河",subtitle:"Jordan River - 施洗约翰施洗处",lat:31.8333,lng:35.5833,description:"约旦河是以色列人进入应许之地和耶稣受洗的地方。",significance:"施洗约翰在此为人施洗，耶稣也在这里接受洗礼。",verses:"马太福音3:13 - '当下，耶稣从加利利来到约旦河，见了约翰，要受他的洗。'",events:["耶稣接受洗礼","施洗约翰传道","以色列人过约旦河"]},sinai:{name:"西奈山",subtitle:"Mount Sinai - 摩西接受十诫",lat:28.5392,lng:33.9753,description:"西奈山是摩西接受十诫和律法的地方。",significance:"这里是神与摩西相遇，颁布十诫和律法的神圣之地。",verses:"出埃及记19:20 - '耶和华降临在西奈山顶上，耶和华召摩西上山顶。'",events:["摩西接受十诫","神颁布律法","以色列人安营"]},redsea:{name:"红海",subtitle:"Red Sea - 摩西分红海",lat:27.5,lng:34.8,description:"红海是摩西带领以色列人出埃及时神迹分开海水的地方。",significance:"神在这里施行大神迹，分开红海让以色列人安全通过。",verses:"出埃及记14:21 - '摩西向海伸杖，耶和华便用大东风，使海水一夜退去。'",events:["红海分开神迹","以色列人安全通过","法老军队被淹没"]},jericho:{name:"耶利哥",subtitle:"Jericho - 古城墙倒塌",lat:31.8704,lng:35.4437,description:"耶利哥是以色列人进入迦南地时攻下的第一座城市。",significance:"这里的城墙因以色列人的信心和神的干预而倒塌。",verses:"约书亚记6:20 - '百姓便呼喊，祭司也吹角。百姓听见角声，便大声呼喊，城墙就塌陷。'",events:["城墙倒塌神迹","喇合得救","以色列人进入迦南"]},caesarea:{name:"该撒利亚",subtitle:"Caesarea - 罗马行政中心",lat:32.5027,lng:34.9055,description:"该撒利亚是罗马统治时期的行政中心，位于地中海沿岸。",significance:"这里是保罗被囚和受审的地方，也是早期教会的重要中心。",verses:"使徒行传10:1 - '在该撒利亚有一个人，名叫哥尼流，是意大利营的百夫长。'",events:["哥尼流归主","保罗被囚","早期教会中心"]},samaria:{name:"撒马利亚",subtitle:"Samaria - 撒马利亚人区域",lat:32.0569,lng:35.2897,description:"撒马利亚是北国以色列的首都，撒马利亚人的居住地。",significance:"耶稣在此与撒马利亚妇人对话，展现了神的普世救恩。",verses:"约翰福音4:4 - '必须经过撒马利亚。'",events:["耶稣与撒马利亚妇人对话","好撒马利亚人比喻","早期福音传播"]}},en:{jerusalem:{name:"Jerusalem",subtitle:"Jerusalem - Holy City of Three Religions",lat:31.7683,lng:35.2137,description:"Jerusalem is a holy city for Judaism, Christianity, and Islam.",significance:"This is where Jesus was crucified, resurrected, and ascended to heaven.",verses:"Psalm 122:6 - 'Pray for the peace of Jerusalem: they shall prosper that love thee.'",events:["Jesus was crucified, resurrected, and ascended here","Solomon built the First Temple","Jesus taught and performed miracles here"]},bethlehem:{name:"Bethlehem",subtitle:"Bethlehem - Birthplace of Jesus",lat:31.7054,lng:35.2024,description:"Bethlehem is the birthplace of King David and Jesus Christ.",significance:"This is where the Messiah was born, fulfilling Old Testament prophecy.",verses:"Matthew 2:1 - 'Now when Jesus was born in Bethlehem of Judaea...'",events:["Jesus Christ was born","The Magi came to worship","King David was born"]},nazareth:{name:"Nazareth",subtitle:"Nazareth - Where Jesus Grew Up",lat:32.7035,lng:35.2959,description:"Nazareth is where Jesus spent his childhood and youth.",significance:"Jesus was called 'the Nazarene' and grew up here, learning carpentry.",verses:"Matthew 2:23 - 'And he came and dwelt in a city called Nazareth...'",events:["Jesus grew up here","Joseph and Mary lived here","Jesus began his public ministry"]},galilee:{name:"Sea of Galilee",subtitle:"Sea of Galilee - Jesus' Ministry Area",lat:32.8333,lng:35.5833,description:"The Sea of Galilee is where most of Jesus' miracles and teachings occurred.",significance:"This is where Jesus called disciples, performed miracles, and taught.",verses:"Matthew 4:18 - 'And Jesus, walking by the sea of Galilee, saw two brethren...'",events:["Jesus walked on water","The feeding of the 5000","Called Peter and other disciples"]},jordan:{name:"Jordan River",subtitle:"Jordan River - John the Baptist's Baptism Site",lat:31.8333,lng:35.5833,description:"The Jordan River is where the Israelites entered the Promised Land and Jesus was baptized.",significance:"John the Baptist baptized people here, including Jesus.",verses:"Matthew 3:13 - 'Then cometh Jesus from Galilee to Jordan unto John, to be baptized of him.'",events:["Jesus was baptized","John the Baptist preached","Israelites crossed the Jordan"]},sinai:{name:"Mount Sinai",subtitle:"Mount Sinai - Moses Received the Ten Commandments",lat:28.5392,lng:33.9753,description:"Mount Sinai is where Moses received the Ten Commandments and the Law.",significance:"This is where God met Moses and gave the Ten Commandments and the Law.",verses:"Exodus 19:20 - 'And the Lord came down upon mount Sinai, on the top of the mount...'",events:["Moses received the Ten Commandments","God gave the Law","Israelites camped here"]},redsea:{name:"Red Sea",subtitle:"Red Sea - Moses Parted the Waters",lat:27.5,lng:34.8,description:"The Red Sea is where Moses led the Israelites out of Egypt through a miraculous parting.",significance:"God performed a great miracle here, parting the sea for Israel's safe passage.",verses:"Exodus 14:21 - 'And Moses stretched out his hand over the sea; and the Lord caused the sea to go back...'",events:["The parting of the Red Sea","Israelites passed safely","Pharaoh's army was drowned"]},jericho:{name:"Jericho",subtitle:"Jericho - Ancient Walls Fell",lat:31.8704,lng:35.4437,description:"Jericho was the first city the Israelites conquered when entering Canaan.",significance:"The walls here fell through Israel's faith and God's intervention.",verses:"Joshua 6:20 - '...the people shouted with a great shout, that the wall fell down flat...'",events:["The walls fell miraculously","Rahab was saved","Israelites entered Canaan"]},caesarea:{name:"Caesarea",subtitle:"Caesarea - Roman Administrative Center",lat:32.5027,lng:34.9055,description:"Caesarea was the administrative center during Roman rule, located on the Mediterranean coast.",significance:"This is where Paul was imprisoned and tried, and an important early church center.",verses:"Acts 10:1 - 'There was a certain man in Caesarea called Cornelius, a centurion of the Italian band...'",events:["Cornelius was converted","Paul was imprisoned","Early church center"]},samaria:{name:"Samaria",subtitle:"Samaria - Samaritan Region",lat:32.0569,lng:35.2897,description:"Samaria was the capital of the northern kingdom of Israel and home of the Samaritans.",significance:"Jesus spoke with the Samaritan woman here, showing God's universal salvation.",verses:"John 4:4 - 'And he must needs go through Samaria.'",events:["Jesus spoke with the Samaritan woman","The Good Samaritan parable","Early gospel spread"]}}},d={moses:{zh:{name:"摩西出埃及路线",description:"从埃及到应许之地的旅程"},en:{name:"Moses' Exodus Route",description:"Journey from Egypt to the Promised Land"},color:"#8B4513",coordinates:[[30,31.2],[27.5,34.8],[28.5392,33.9753],[31,35],[31.7683,35.2137]]},jesus:{zh:{name:"耶稣传道路线",description:"从拿撒勒到耶路撒冷的教导之旅"},en:{name:"Jesus' Ministry Route",description:"Teaching journey from Nazareth to Jerusalem"},color:"#FFD700",coordinates:[[32.7035,35.2959],[32.85,35.5],[32.88,35.57],[32.8333,35.5833],[31.7683,35.2137]]},paul:{zh:{name:"保罗传道旅程",description:"从耶路撒冷到罗马的传播福音之旅"},en:{name:"Paul's Missionary Journey",description:"Gospel-spreading journey from Jerusalem to Rome"},color:"#4169E1",coordinates:[[31.7683,35.2137],[36.2,36.15],[39.9,32.8],[37.9,23.7],[41.9,12.5]]}};let o,l=null,r="zh";function u(){o=L.map("map").setView([31.5,35.5],8),L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap contributors"}).addTo(o),m(),f()}function m(){const a=h[r];Object.keys(a).forEach(e=>{const t=a[e];L.marker([t.lat,t.lng]).addTo(o).bindPopup(`
-                        <div class="custom-popup">
-                            <h3>${t.name}</h3>
-                            <p><strong>${t.subtitle}</strong></p>
-                            <p>${t.description}</p>
-                        </div>
-                    `).on("click",()=>p(e))})}function p(a){const e=h[r][a],t=document.getElementById("sidebar-content");t.innerHTML=`
-                <div class="sidebar-content">
-                    <h2 class="location-title">${e.name}</h2>
-                    <p class="location-subtitle">${e.subtitle}</p>
-                    
-                    <div class="info-section">
-                        <h3>地理坐标</h3>
-                        <p class="coordinates">${e.lat.toFixed(4)}°, ${e.lng.toFixed(4)}°</p>
-                    </div>
-                    
-                    <div class="info-section">
-                        <h3>圣经意义</h3>
-                        <p>${e.significance}</p>
-                    </div>
-                    
-                    <div class="info-section">
-                        <h3>相关事件</h3>
-                        ${e.events.map(n=>`<p>• ${n}</p>`).join("")}
-                    </div>
-                    
-                    <div class="bible-verse">
-                        <h3>相关经文</h3>
-                        <p>${e.verses}</p>
-                    </div>
-                </div>
-            `}function g(a){l&&o.removeLayer(l);const e=d[a],t=e[r],n=L.polyline(e.coordinates,{color:e.color,weight:4,opacity:.8}).addTo(o);n.bindPopup(`
-                <div class="custom-popup">
-                    <h3>${t.name}</h3>
-                    <p>${t.description}</p>
-                </div>
-            `),l=n,o.fitBounds(n.getBounds(),{padding:[20,20]})}function f(){document.querySelectorAll(".lang-btn").forEach(a=>{a.addEventListener("click",e=>{document.querySelectorAll(".lang-btn").forEach(t=>t.classList.remove("active")),e.target.classList.add("active"),r=e.target.dataset.lang,v()})}),document.querySelectorAll(".route-btn").forEach(a=>{a.addEventListener("click",e=>{document.querySelectorAll(".route-btn").forEach(n=>n.classList.remove("active")),e.target.classList.add("active");const t=e.target.dataset.route;g(t)})})}function v(){document.querySelector(".title").textContent=r==="zh"?"圣经地理互动地图":"Interactive Bible Geography Map";const a=h[r].welcome||{zh:{title:"欢迎来到圣经地理互动地图",content:"点击地图上的地点标记，了解圣经中的重要地理位置和相关故事。使用左侧的路线按钮，可以查看摩西、耶稣和保罗的行走轨迹。"},en:{title:"Welcome to Interactive Bible Geography Map",content:"Click on location markers on the map to learn about important biblical places and their stories. Use the route buttons on the left to view the journeys of Moses, Jesus, and Paul."}}[r];document.querySelector(".welcome-message h2").textContent=a.title,document.querySelector(".welcome-message p").textContent=a.content,Object.keys(d).forEach(t=>{const n=document.querySelector(`[data-route="${t}"]`),s=d[t][r];n.innerHTML=`
-                    <strong>${s.name}</strong><br>
-                    <small>${s.description}</small>
-                `}),l&&(o.removeLayer(l),l=null);const e=document.getElementById("sidebar-content");e.innerHTML=`
-                <div class="sidebar-content">
-                    <div class="welcome-message">
-                        <h2>${a.title}</h2>
-                        <p>${a.content}</p>
-                    </div>
-                </div>
-            `}document.addEventListener("DOMContentLoaded",u);
-</script>
+  <!-- TailwindCSS 3.4.14 -->
+  <script src="https://cdn.tailwindcss.com/3.4.14"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: "#f97316",     // 活力橙
+            secondary: "#60a5fa",   // 晴空蓝
+            accent: "#fcd34d",       // 淡黄色
+            neutral: "#fef7cd",      // 浅米色
+            dark: "#78350f",         // 深棕色
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            display: ['"Fredoka One"', 'cursive'],
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.6s ease-in-out',
+            'slide-up': 'slideUp 0.8s ease-out',
+            'float': 'float 3s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+            slideUp: { '0%': { transform: 'translateY(30px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+            float: { '0%,100%': { transform: 'translateY(0px)' }, '50%': { transform: 'translateY(-8px)' } }
+          }
+        },
+      },
+    };
+  </script>
+  <style>
+    body { margin:0; font-family:'Inter',system-ui,sans-serif; }
+    .section-card { transition: all 0.3s ease; }
+    .section-card:hover { transform: translateY(-6px); box-shadow: 0 25px 30px -12px rgba(0,0,0,0.15); }
+    .btn-primary { background: linear-gradient(135deg, #f97316, #fb923c); transition: all 0.3s ease; }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 22px rgba(249,115,22,0.3); }
+    .btn-secondary { background: linear-gradient(135deg, #60a5fa, #3b82f6); transition: all 0.3s ease; }
+    .btn-secondary:hover { transform: translateY(-2px); box-shadow: 0 12px 22px rgba(96,165,250,0.3); }
+    .text-gradient { background: linear-gradient(135deg, #f97316, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    html { scroll-behavior: smooth; }
+    img { max-width:100%; height:auto; object-fit: cover; }
+  </style>
 </head>
-<body>
-    <div class="container">
-        <header class="header">
-            <h1 class="title">圣经地理互动地图</h1>
-            <div class="language-switch">
-                <button class="lang-btn active" data-lang="zh">中文</button>
-                <button class="lang-btn" data-lang="en">English</button>
-            </div>
-        </header>
 
-        <div class="map-container">
-            <div class="route-controls">
-                <button class="route-btn moses" data-route="moses">
-                    <strong>摩西出埃及</strong><br>
-                    <small>埃及 → 红海 → 西奈山 → 迦南</small>
-                </button>
-                <button class="route-btn jesus" data-route="jesus">
-                    <strong>耶稣传道</strong><br>
-                    <small>拿撒勒 → 加利利 → 耶路撒冷</small>
-                </button>
-                <button class="route-btn paul" data-route="paul">
-                    <strong>保罗传道</strong><br>
-                    <small>耶路撒冷 → 小亚细亚 → 希腊 → 罗马</small>
-                </button>
-            </div>
-            <div id="map"></div>
-        </div>
+<body class="bg-neutral font-sans text-dark">
 
-        <div class="sidebar">
-            <div class="sidebar-content" id="sidebar-content">
-                <div class="welcome-message">
-                    <h2>欢迎来到圣经地理互动地图</h2>
-                    <p>点击地图上的地点标记，了解圣经中的重要地理位置和相关故事。使用左侧的路线按钮，可以查看摩西、耶稣和保罗的行走轨迹。</p>
-                </div>
-            </div>
+<!-- 头部导航 -->
+<header class="bg-white/95 backdrop-blur-sm shadow-lg sticky top-0 z-50">
+  <nav class="container mx-auto px-6 py-3 md:py-4">
+    <div class="flex items-center justify-between flex-wrap gap-4">
+      <div class="flex items-center space-x-2">
+        <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-md">
+          <span class="text-white font-bold text-xl">昔</span>
         </div>
+        <h1 class="text-2xl font-display text-primary">昔設Club</h1>
+      </div>
+      
+      <div class="hidden md:flex items-center space-x-5 lg:space-x-6 text-sm lg:text-base">
+        <a href="#workshops" class="text-dark hover:text-primary font-medium transition">手工工坊</a>
+        <a href="#hiking" class="text-dark hover:text-primary font-medium transition">徒步研学</a>
+        <a href="#inventions" class="text-dark hover:text-primary font-medium transition">小发明</a>
+        <a href="#charity" class="text-dark hover:text-primary font-medium transition">公益义卖</a>
+        <a href="#parents" class="text-dark hover:text-primary font-medium transition">父母技能</a>
+      </div>
+      
+      <a href="https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=e85t327a-95f5-4707-8f63-79f8f3db9815" 
+         target="_blank" 
+         class="btn-primary text-white px-5 py-2 rounded-full font-semibold text-sm md:text-base shadow-md">
+        加入飞书群
+      </a>
     </div>
+  </nav>
+</header>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
+<main>
+  <!-- 英雄区域 -->
+  <section class="bg-gradient-to-br from-neutral to-accent py-16 md:py-20">
+    <div class="container mx-auto px-6 text-center">
+      <h2 class="text-4xl md:text-5xl lg:text-6xl font-display text-gradient mb-5 animate-fade-in">
+        昔設Club亲子社团
+      </h2>
+      <p class="text-lg md:text-xl text-dark mb-8 max-w-3xl mx-auto animate-slide-up">
+        与孩子一起探索世界，在快乐中成长。手工、徒步、发明、公益、父母赋能，让每个家庭收获珍贵回忆。
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up">
+        <a href="#workshops" class="btn-primary text-white px-8 py-3 rounded-full font-semibold shadow-lg">
+          探索活动
+        </a>
+        <a href="https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=e85t327a-95f5-4707-8f63-79f8f3db9815" 
+           target="_blank" 
+           class="btn-secondary text-white px-8 py-3 rounded-full font-semibold shadow-lg">
+          立即加入
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 手工制作工坊 -->
+  <section id="workshops" class="py-16 md:py-20 bg-white">
+    <div class="container mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div class="section-card bg-gradient-to-br from-accent to-neutral p-6 md:p-8 rounded-3xl shadow-lg">
+          <img src="https://xishesherukudiyige-1329755034.cos.ap-chongqing.myqcloud.com/%E6%89%8B%E4%BD%9CPBL%E5%B0%8F%E7%A8%8B%E5%BA%8F%E5%9B%BE%E7%89%87/%E5%9B%BE%E6%A0%873%EF%BC%9A%E3%80%8C%E9%BB%8F%E5%9C%9F%E7%96%97%E6%84%88%E3%80%8D.webp" 
+               alt="手工制作工坊" 
+               class="w-full h-72 md:h-80 object-cover rounded-2xl shadow-xl">
+        </div>
+        <div class="space-y-5">
+          <h3 class="text-3xl md:text-4xl font-display text-primary">手工制作工坊</h3>
+          <p class="text-base md:text-lg text-gray-700 leading-relaxed">
+            用双手创造美好，培养创造力与专注力。纸艺、陶艺、布艺、木工，每个作品都是孩子成长的见证。
+          </p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-neutral/60 p-3 rounded-xl"><span class="font-semibold text-primary">纸艺创作</span><p class="text-sm text-gray-600 mt-1">折纸、剪纸、纸雕</p></div>
+            <div class="bg-neutral/60 p-3 rounded-xl"><span class="font-semibold text-primary">陶艺体验</span><p class="text-sm text-gray-600 mt-1">捏塑、拉坯、彩绘</p></div>
+            <div class="bg-neutral/60 p-3 rounded-xl"><span class="font-semibold text-primary">布艺制作</span><p class="text-sm text-gray-600 mt-1">缝纫、刺绣、拼布</p></div>
+            <div class="bg-neutral/60 p-3 rounded-xl"><span class="font-semibold text-primary">木工创作</span><p class="text-sm text-gray-600 mt-1">拼接、雕刻、装饰</p></div>
+          </div>
+          <div class="flex flex-wrap gap-2 pt-2">
+            <span class="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium">培养创造力</span>
+            <span class="bg-secondary/10 text-secondary px-3 py-1.5 rounded-full text-sm font-medium">提升专注力</span>
+            <span class="bg-accent/40 text-dark px-3 py-1.5 rounded-full text-sm font-medium">亲子互动</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 徒步研学之旅 -->
+  <section id="hiking" class="py-16 md:py-20 bg-gradient-to-r from-secondary to-primary text-white">
+    <div class="container mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div class="order-2 lg:order-1 space-y-5">
+          <h3 class="text-3xl md:text-4xl font-display">徒步研学之旅</h3>
+          <p class="text-base md:text-lg leading-relaxed opacity-95">
+            走出教室，拥抱自然。自然观察、地理探索、历史学习，在运动中增长知识，培养探索精神与团队合作。
+          </p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl"><span class="font-semibold">自然观察</span><p class="text-sm opacity-90 mt-1">动植物识别</p></div>
+            <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl"><span class="font-semibold">地理探索</span><p class="text-sm opacity-90 mt-1">地形地貌</p></div>
+            <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl"><span class="font-semibold">历史文化</span><p class="text-sm opacity-90 mt-1">古迹探访</p></div>
+            <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl"><span class="font-semibold">体能训练</span><p class="text-sm opacity-90 mt-1">意志培养</p></div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="bg-white/30 text-white px-3 py-1.5 rounded-full text-sm font-medium">增强体质</span>
+            <span class="bg-white/30 text-white px-3 py-1.5 rounded-full text-sm font-medium">增长知识</span>
+            <span class="bg-white/30 text-white px-3 py-1.5 rounded-full text-sm font-medium">团队协作</span>
+          </div>
+        </div>
+        <div class="order-1 lg:order-2 section-card bg-white/10 p-6 md:p-8 rounded-3xl backdrop-blur-sm shadow-xl">
+          <img src="https://xishesherukudiyige-1329755034.cos.ap-chongqing.myqcloud.com/%E6%89%8B%E4%BD%9CPBL%E5%B0%8F%E7%A8%8B%E5%BA%8F%E5%9B%BE%E7%89%87/%E5%9B%BE%E7%89%871%EF%BC%9A%E7%96%97%E6%84%88%E6%89%8B%E4%BD%9C%EF%BC%8C%E6%B8%A9%E6%9A%96%E7%9B%B8%E4%BC%B4.webp" 
+               alt="徒步研学之旅" 
+               class="w-full h-72 md:h-80 object-cover rounded-2xl shadow-xl">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 小发明设计实验室（图片已更新为新链接） -->
+  <section id="inventions" class="py-16 md:py-20 bg-white">
+    <div class="container mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div class="section-card bg-gradient-to-br from-primary to-secondary p-6 md:p-8 rounded-3xl shadow-xl">
+          <!-- 替换为指定的新图片 -->
+          <img src="https://xishesherukudiyige-1329755034.cos.ap-chongqing.myqcloud.com/%E6%98%94%E8%A8%ADclub/%E5%B0%8F%E5%8F%91%E6%98%8E%E8%AE%BE%E8%AE%A1%E5%AE%9E%E9%AA%8C%E5%AE%A4.jpg" 
+               alt="小发明设计实验室" 
+               class="w-full h-72 md:h-80 object-cover rounded-2xl shadow-lg"
+               onerror="this.onerror=null; this.src='https://placehold.co/600x400/f97316/white?text= Invention+Lab';">
+        </div>
+        <div class="space-y-5">
+          <h3 class="text-3xl md:text-4xl font-display text-primary">小发明设计实验室</h3>
+          <p class="text-base md:text-lg text-gray-700 leading-relaxed">
+            激发创新思维，培养工程素养。将奇思妙想变成现实，学习基础工程原理，体验创造的乐趣与成就感。
+          </p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-neutral/60 p-3 rounded-xl"><span class="font-semibold text-primary">创意设计</span><p class="text-sm text-gray-600 mt-1">头脑风暴</p></div>
+            <div class="bg-neutral/60 p-3 rounded-xl"><span class="font-semibold text-primary">原型制作</span><p class="text-sm text-gray-600 mt-1">模型搭建</p></div>
+            <div class="bg-neutral/60 p-3 rounded-xl"><span class="font-semibold text-primary">材料探索</span><p class="text-sm text-gray-600 mt-1">创新应用</p></div>
+            <div class="bg-neutral/60 p-3 rounded-xl"><span class="font-semibold text-primary">成果展示</span><p class="text-sm text-gray-600 mt-1">经验分享</p></div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium">创新思维</span>
+            <span class="bg-secondary/10 text-secondary px-3 py-1.5 rounded-full text-sm font-medium">工程素养</span>
+            <span class="bg-accent/40 text-dark px-3 py-1.5 rounded-full text-sm font-medium">动手能力</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 价值收益型说明板块（新增） -->
+  <section class="py-12 md:py-16 bg-gradient-to-r from-yellow-50 to-orange-50 border-y border-primary/20">
+    <div class="container mx-auto px-6 max-w-5xl">
+      <div class="bg-white/80 backdrop-blur-sm rounded-3xl p-8 md:p-10 shadow-xl border-l-8 border-primary">
+        <h3 class="text-3xl md:text-4xl font-display text-primary mb-6 text-center">🚀 让热爱变现 · 轻资产创业计划</h3>
+        <div class="space-y-5 text-gray-700 text-base md:text-lg leading-relaxed">
+          <p class="flex items-start gap-3"><span class="text-primary text-2xl">💡</span> <span>想利用碎片时间增加一份收入，却苦于没有门路？<strong class="text-primary">“昔設”</strong>为您打开一扇门！我们提供：</span></p>
+          <div class="grid md:grid-cols-3 gap-5 mt-6">
+            <div class="bg-neutral/60 p-5 rounded-xl text-center">
+              <div class="text-4xl mb-2">📚</div>
+              <h4 class="font-bold text-primary mb-2">全套小科创作品教程</h4>
+              <p class="text-sm">从材料清单到教学视频，零基础也能快速上手</p>
+            </div>
+            <div class="bg-neutral/60 p-5 rounded-xl text-center">
+              <div class="text-4xl mb-2">⚙️</div>
+              <h4 class="font-bold text-primary mb-2">轻量化设备支持</h4>
+              <p class="text-sm">低成本投入，轻松搭建家庭工作室</p>
+            </div>
+            <div class="bg-neutral/60 p-5 rounded-xl text-center">
+              <div class="text-4xl mb-2">🔄</div>
+              <h4 class="font-bold text-primary mb-2">复制式运营模式</h4>
+              <p class="text-sm">邀请3-5个家庭，即可开设主题小班，通过课程收费或作品销售实现收益</p>
+            </div>
+          </div>
+          <p class="mt-6 text-center text-lg font-medium bg-primary/10 p-4 rounded-xl">
+            🌟 在这里，您学到的不仅是手艺，更是一套可复制的<strong class="text-primary">“家庭创客”商业模式</strong>——让热爱变现，让创意生根。
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 义卖与公益平台（图片已更新为新链接） -->
+  <section id="charity" class="py-16 md:py-20 bg-gradient-to-br from-accent to-neutral">
+    <div class="container mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div class="order-2 lg:order-1 space-y-5">
+          <h3 class="text-3xl md:text-4xl font-display text-primary">义卖与公益平台</h3>
+          <p class="text-base md:text-lg text-gray-700 leading-relaxed">
+            传递爱心，学会分享。通过义卖活动，孩子学会珍惜与理解价值，培养社会责任感和同理心。
+          </p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white/70 p-3 rounded-xl"><span class="font-semibold text-primary">物品义卖</span><p class="text-sm text-gray-600 mt-1">手工作品、闲置</p></div>
+            <div class="bg-white/70 p-3 rounded-xl"><span class="font-semibold text-primary">公益捐赠</span><p class="text-sm text-gray-600 mt-1">爱心传递</p></div>
+            <div class="bg-white/70 p-3 rounded-xl"><span class="font-semibold text-primary">环保行动</span><p class="text-sm text-gray-600 mt-1">垃圾分类</p></div>
+            <div class="bg-white/70 p-3 rounded-xl"><span class="font-semibold text-primary">社区服务</span><p class="text-sm text-gray-600 mt-1">志愿服务</p></div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium">社会责任</span>
+            <span class="bg-secondary/10 text-secondary px-3 py-1.5 rounded-full text-sm font-medium">同理心</span>
+            <span class="bg-accent/40 text-dark px-3 py-1.5 rounded-full text-sm font-medium">爱心传递</span>
+          </div>
+        </div>
+        <div class="order-1 lg:order-2 section-card bg-white p-6 md:p-8 rounded-3xl shadow-xl">
+          <!-- 替换为指定的新图片 -->
+          <img src="https://xishesherukudiyige-1329755034.cos.ap-chongqing.myqcloud.com/%E6%98%94%E8%A8%ADclub/%E4%B9%89%E5%8D%96.jpg" 
+               alt="义卖与公益平台" 
+               class="w-full h-72 md:h-80 object-cover rounded-2xl shadow-lg"
+               onerror="this.onerror=null; this.src='https://placehold.co/600x400/fcd34d/78350f?text= Charity+Sale';">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 父母技能孵化营 -->
+  <section id="parents" class="py-16 md:py-20 bg-gradient-to-br from-primary to-secondary text-white">
+    <div class="container mx-auto px-6">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <div class="section-card bg-white/10 p-6 md:p-8 rounded-3xl backdrop-blur-sm shadow-xl">
+          <img src="https://xishesherukudiyige-1329755034.cos.ap-chongqing.myqcloud.com/%E6%89%8B%E4%BD%9CPBL%E5%B0%8F%E7%A8%8B%E5%BA%8F%E5%9B%BE%E7%89%87/%E5%9B%BE%E7%89%873%EF%BC%9A%E5%B0%8F%E5%8C%A0%E4%BA%BA%E7%9A%84%E7%96%97%E6%84%88%E5%B0%8F%E9%93%BA.webp" 
+               alt="父母技能孵化营" 
+               class="w-full h-72 md:h-80 object-cover rounded-2xl shadow-xl">
+        </div>
+        <div class="space-y-5">
+          <h3 class="text-3xl md:text-4xl font-display">父母技能孵化营</h3>
+          <p class="text-base md:text-lg leading-relaxed opacity-95">
+            与孩子共同成长。育儿指导、心理辅导、技能培训、经验分享，助你成为孩子成长路上的良师益友。
+          </p>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl"><span class="font-semibold">育儿指导</span><p class="text-sm opacity-90 mt-1">科学育儿</p></div>
+            <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl"><span class="font-semibold">心理辅导</span><p class="text-sm opacity-90 mt-1">情绪管理</p></div>
+            <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl"><span class="font-semibold">技能培训</span><p class="text-sm opacity-90 mt-1">手工/活动设计</p></div>
+            <div class="bg-white/20 backdrop-blur-sm p-3 rounded-xl"><span class="font-semibold">经验分享</span><p class="text-sm opacity-90 mt-1">家长交流</p></div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="bg-white/30 text-white px-3 py-1.5 rounded-full text-sm font-medium">科学育儿</span>
+            <span class="bg-white/30 text-white px-3 py-1.5 rounded-full text-sm font-medium">亲子关系</span>
+            <span class="bg-white/30 text-white px-3 py-1.5 rounded-full text-sm font-medium">共同成长</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- 底部CTA -->
+<section class="py-16 md:py-20 bg-gradient-to-r from-primary via-secondary to-primary">
+  <div class="container mx-auto px-6 text-center text-white">
+    <h3 class="text-3xl md:text-4xl font-display mb-5 animate-float">加入昔設Club，开启亲子成长之旅</h3>
+    <p class="text-lg md:text-xl mb-8 max-w-2xl mx-auto opacity-95">
+      与志同道合的家庭一起，为孩子创造美好的成长回忆。立即加入飞书群，获取最新活动信息！
+    </p>
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <a href="https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=e85t327a-95f5-4707-8f63-79f8f3db9815" 
+         target="_blank" 
+         class="bg-white text-primary px-8 py-4 rounded-full font-bold text-lg shadow-xl hover:scale-105 transition-transform">
+        🚀 立即加入飞书群
+      </a>
+      <button onclick="window.scrollTo({top:0,behavior:'smooth'})" 
+              class="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-primary transition-all">
+        ⬆️ 返回顶部
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- 页脚 -->
+<footer class="bg-dark text-white py-10">
+  <div class="container mx-auto px-6">
+    <div class="grid md:grid-cols-3 gap-8">
+      <div>
+        <div class="flex items-center space-x-2 mb-3">
+          <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center"><span class="text-white font-bold text-xl">昔</span></div>
+          <h4 class="text-2xl font-display">昔設Club</h4>
+        </div>
+        <p class="text-gray-300 text-sm leading-relaxed">专注于亲子教育，为家庭提供高质量的亲子活动和学习体验。</p>
+      </div>
+      <div>
+        <h5 class="text-lg font-semibold mb-3">联系我们</h5>
+        <div class="space-y-1 text-gray-300 text-sm">
+          <p>📧 Jeantian@foxmail.com</p>
+          <!-- 微信已删除 -->
+          <p>🏠 昔設亲子活动中心</p>
+        </div>
+      </div>
+      <div>
+        <h5 class="text-lg font-semibold mb-3">快速链接</h5>
+        <div class="grid grid-cols-2 gap-1 text-sm">
+          <a href="#workshops" class="text-gray-300 hover:text-primary transition">手工工坊</a>
+          <a href="#hiking" class="text-gray-300 hover:text-primary transition">徒步研学</a>
+          <a href="#inventions" class="text-gray-300 hover:text-primary transition">小发明</a>
+          <a href="#charity" class="text-gray-300 hover:text-primary transition">公益义卖</a>
+          <a href="#parents" class="text-gray-300 hover:text-primary transition">父母技能</a>
+        </div>
+      </div>
+    </div>
+    <div class="border-t border-gray-600 mt-8 pt-6 text-center text-gray-400 text-sm">
+      <p>&copy; 2024 昔設Club亲子社团 · 与孩子一起成长</p>
+    </div>
+  </div>
+</footer>
+
+<!-- 返回顶部按钮 -->
+<button id="backToTop" 
+        onclick="window.scrollTo({top:0,behavior:'smooth'})" 
+        class="fixed bottom-6 right-6 bg-primary text-white w-12 h-12 rounded-full shadow-xl hover:bg-opacity-80 transition-all duration-300 opacity-0 pointer-events-none z-50 text-xl flex items-center justify-center">
+  ↑
+</button>
+
+<!-- 交互脚本 -->
+<script>
+  (function() {
+    // 返回顶部按钮显隐
+    window.addEventListener('scroll', function() {
+      const btn = document.getElementById('backToTop');
+      if (window.pageYOffset > 300) {
+        btn.classList.remove('opacity-0', 'pointer-events-none');
+        btn.classList.add('opacity-100');
+      } else {
+        btn.classList.add('opacity-0', 'pointer-events-none');
+        btn.classList.remove('opacity-100');
+      }
+    });
+
+    // 平滑滚动 (兼容所有锚点)
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    // 简单的滚动显示动画 (淡入)
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('animate-fade-in');
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('section').forEach(s => observer.observe(s));
+
+    console.log('🎉 昔設Club 页面更新完成 (图片已替换，新增价值收益板块)');
+  })();
+</script>
 </body>
 </html>
